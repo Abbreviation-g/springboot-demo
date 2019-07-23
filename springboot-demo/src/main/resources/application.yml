@@ -5,9 +5,10 @@ spring:
       name: springboot-demo
    datasource:
       url: jdbc:mysql://127.0.0.1:3306/province_city_county?useSSL=true&autoReconnect=true&zeroDateTimeBehavior=convertToNull&useUnicode=true&amp;characterEncoding=utf-8&allowMultiQueries=true
-      username: joshvm_developer
-      password: josh2017
+      username: root
+      password: password
       driver-class-name: com.mysql.jdbc.Driver
+      schema: classpath:sql/schema.sql
 
 mybatis:
    mapperLocations: classpath:mapper/*.xml
