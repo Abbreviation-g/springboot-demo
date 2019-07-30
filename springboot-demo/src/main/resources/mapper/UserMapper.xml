@@ -3,15 +3,24 @@
 <mapper namespace="com.my.springboot.demo.dao.MapMapper">
 
 	<insert id="create" parameterType="java.util.Map">
-		INSERT INTO t_map 
-		<foreach collection="map.keys" item="key" open="(" close=")" separator="," >  
-            ${key}  
-         </foreach>  
-         values   
-         <foreach collection="map.values"  item="val" open="(" close=")" separator=",">  
-            #{val}
-         </foreach>
+		INSERT INTO t_user (
+			NAME,
+			gender
+		) VALUES (
+			#{map.name},
+			#{map.gender}
+		)
 	</insert>
 
-	
+	<select id="select" resultType="java.util.HashMap">
+		SELECT
+		  *
+		FROM
+		  t_user
+		<where>
+			<if test="nameType != ''">
+				t_user.`name` IS NULL
+			</if>
+		</where>
+	</select>
 </mapper>
