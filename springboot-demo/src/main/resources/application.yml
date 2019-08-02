@@ -7,7 +7,7 @@ spring:
    application:
       name: springboot-demo
    datasource:
-      url: jdbc:mysql://127.0.0.1:3306/province_city_county?useSSL=true&useUnicode=true&characterEncoding=UTF-8&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC&zeroDateTimeBehavior=convertToNull
+      url: jdbc:mysql://127.0.0.1:3306/db_spring_demo?useSSL=true&useUnicode=true&characterEncoding=UTF-8&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=Asia/Shanghai&zeroDateTimeBehavior=convertToNull
       username: root
       password: password
       driver-class-name: com.mysql.cj.jdbc.Driver

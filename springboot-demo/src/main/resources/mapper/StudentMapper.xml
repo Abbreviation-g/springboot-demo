@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.my.springboot.demo.dao.StudentMapper">
+	<resultMap type="com.my.springboot.demo.entity.Student"
+		id="student">
+		<id column="id" property="id" />
+		<result column="c_class_id" property="classId" />
+		<result column="c_name" property="name" />
+		<association property="studentExtra"
+			select="selectStudentExtra" javaType="com.my.springboot.demo.entity.StudentExtra" column="id" fetchType="lazy">
+			<id column="id" property="id" />
+			<result column="c_student_id" property="studentId" />
+			<result column="c_father_name" property="fatherName" />
+			<result column="c_mother_name" property="motherName" />
+		</association>
+	</resultMap>
+	<resultMap type="com.my.springboot.demo.entity.StudentExtra"
+		id="studentExtra">
+		<id column="id" property="id" />
+		<result column="c_student_id" property="studentId" />
+		<result column="c_father_name" property="fatherName" />
+		<result column="c_mother_name" property="motherName" />
+	</resultMap>
+
+	<select id="selectStudent" resultMap="student">
+		SELECT * FROM `t_student`
+		AS t1 WHERE t1.`id` = #{id}
+	</select>
+
+	<select id="selectStudentExtra" resultMap="studentExtra">
+		SELECT * FROM
+		`t_student_extra` AS t1 WHERE
+		t1.`c_student_id` = #{id}
+	</select>
+	
+	<select id="selectStudentsByClass" resultMap="student">
+		SELECT * FROM `t_student`
+		AS t1 WHERE t1.`c_class_id` = #{classId}
+	</select>
+</mapper>

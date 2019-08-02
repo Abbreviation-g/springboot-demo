@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.my.springboot.demo.dao.ClassMapper">
+	<resultMap type="com.my.springboot.demo.entity.ClassTable"
+		id="class">
+		<id column="id" property="id" />
+		<result column="c_class_name" property="className" />
+		<collection property="students" column="{classId = id}"  select="com.my.springboot.demo.dao.StudentMapper.selectStudentsByClass"></collection>
+	</resultMap>
+
+	<select id="selectClass" resultMap="class">
+		SELECT * FROM `t_class` AS t WHERE t.`id` =  #{id}
+	</select>
+	
+</mapper>
