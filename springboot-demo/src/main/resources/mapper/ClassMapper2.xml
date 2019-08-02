@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.my.springboot.demo.dao.ClassMapper2">
+	<resultMap type="com.my.springboot.demo.entity.ClassTable"
+		id="class">
+		<id column="classId" property="id" />
+		<result column="className" property="className" />
+		<collection property="students" ofType="com.my.springboot.demo.entity.Student" >
+			<id column="studentId" property="id" />
+			<result column="classId" property="classId" />
+			<result column="studentName" property="name" />
+			<association property="studentExtra" javaType="com.my.springboot.demo.entity.StudentExtra">
+				<id column="studentExtraId" property="id"/>
+				<result column="fatherName" property="fatherName"/>
+				<result column="motherName" property="motherName"/>
+			</association>
+		</collection>
+	</resultMap>
+
+	<select id="selectClass" resultMap="class">
+		SELECT
+		  t1.`id` AS classId,
+		  t1.`c_class_name` AS className,
+		  t2.`id` AS studentId,
+		  t2.`c_name` AS studentName,
+		  t3.`id` AS studentExtraId,
+		  t3.`c_father_name` AS fatherName,
+		  t3.`c_mother_name` AS motherName
+		FROM
+		  `t_class` AS t1
+		  JOIN `t_student` AS t2
+		    ON t1.`id` = t2.`c_class_id`
+		  JOIN `t_student_extra` AS t3
+		    ON t2.`id` = t3.`c_student_id`
+		WHERE t1.`id` = #{classId}
+	</select>
+	
+</mapper>
