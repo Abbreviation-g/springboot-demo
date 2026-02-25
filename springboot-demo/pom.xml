@@ -16,6 +16,7 @@
         <mybatis.version>3.0.4</mybatis.version>
         <fastjson.version>1.2.83</fastjson.version>
         <mysql.version>8.0.28</mysql.version>
+        <satoken.version>1.42.0</satoken.version>
     </properties>
 
     <parent>
@@ -72,6 +73,13 @@
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
+        </dependency>
+
+        <!-- Sa-Token 权限认证，在线文档：https://sa-token.cc -->
+        <dependency>
+            <groupId>cn.dev33</groupId>
+            <artifactId>sa-token-spring-boot3-starter</artifactId>
+            <version>${satoken.version}</version>
         </dependency>
     </dependencies>
 
