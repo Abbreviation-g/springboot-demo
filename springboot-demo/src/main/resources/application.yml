@@ -1,9 +1,13 @@
 server:
    port: 8763
 spring:
-   redis:
-      host: 127.0.0.1
-      port: 6379
+   data:
+     redis:
+        host: 127.0.0.1
+        port: 6379
+        password: password
+        timeout: 10000
+        database: 0
    application:
       name: springboot-demo
    datasource:
@@ -11,7 +15,6 @@ spring:
       username: root
       password: password
       driver-class-name: com.mysql.cj.jdbc.Driver
-      schema: classpath:sql/schema.sql
   
 
 mybatis:
