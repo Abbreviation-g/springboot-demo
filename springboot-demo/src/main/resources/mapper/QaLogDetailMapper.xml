@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.my.springboot.demo.dao.QaLogDetailMapper">
+    <resultMap id="baseResultMap" type="com.my.springboot.demo.entity.QuestionAnswerLogDetail">
+        <id column="request_id" jdbcType="VARCHAR" property="requestId"/>
+        <result column="session_id" jdbcType="VARCHAR" property="sessionId"/>
+        <result column="user_id" jdbcType="VARCHAR" property="userId"/>
+        <result column="question" jdbcType="VARCHAR" property="question"/>
+        <result column="answer" jdbcType="VARCHAR" property="answer"/>
+        <result column="service_cards" jdbcType="VARCHAR" property="serviceCards"/>
+        <result column="references" jdbcType="VARCHAR" property="references"/>
+        <result column="options" jdbcType="VARCHAR" property="options"/>
+        <result column="suggestions" jdbcType="VARCHAR" property="suggestions"/>
+        <result column="request_time" jdbcType="TIMESTAMP" property="requestTime"/>
+        <result column="deleted" jdbcType="TIMESTAMP" property="deleted"/>
+        <result column="deletedByUser" jdbcType="TIMESTAMP" property="deleted_by_user"/>
+    </resultMap>
+
+    <select id="selectByRequestId" resultMap="baseResultMap">
+        SELECT *
+        FROM qa_log_detail
+        WHERE request_id = #{requestId}
+    </select>
+
+    <select id="totalBeforeRequestId">
+        SELECT COUNT(1)
+        FROM qa_log_detail
+        WHERE session_id = #{sessionId}
+          AND request_time &lt;
+              (SELECT request_time
+               FROM qa_log_detail
+               WHERE session_id = #{sessionId} AND request_id = #{requestId})
+    </select>
+
+    <select id="total">
+        SELECT COUNT(1)
+        FROM qa_log_detail
+        WHERE session_id = #{sessionId}
+    </select>
+
+    <select id="queryByPage" resultMap="baseResultMap">
+        SELECT *
+        FROM qa_log_detail
+        WHERE session_id = #{sessionId}
+        ORDER BY request_time ASC
+            LIMIT #{offset}, #{limit}
+    </select>
+</mapper>
