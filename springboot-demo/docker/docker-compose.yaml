@@ -1,0 +1,7 @@
+services:
+  springboot-demo:
+    image: springboot-demo:0.0.1
+    container_name: springboot-demo
+    ports:
+      - "8763:8763"
+    restart: always
