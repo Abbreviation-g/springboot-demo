@@ -35,23 +35,21 @@ public class InferenceLogController {
         String sessionId = request.getSessionId();
         String requestId = request.getRequestId();
         log.info("InferenceLogController.historyDetail,sessionId={}, requestId={}", sessionId, requestId);
+
+        int total = qaLogDetailMapper.total(sessionId);
+        int pageSize = request.getPageSize();
+        int current;
+        int offset;
         if (ObjectUtils.isEmpty(requestId)) {
-            int total = qaLogDetailMapper.total(sessionId);
-            int pageSize = request.getPageSize();
-            int current = request.getPageNo();
-            int offset = (current - 1) * pageSize;
-            List<QuestionAnswerLogDetail> currentPageItems = qaLogDetailMapper.queryByPage(sessionId, offset, pageSize);
-            List<QaLogDetailResponse> items = currentPageItems.stream().map(QaLogDetailResponse::new).toList();
-            return new PageItemsResponse<>(items, total, current, pageSize);
+            current = request.getPageNo();
+            offset = (current - 1) * pageSize;
         } else {
             int index = qaLogDetailMapper.totalBeforeRequestId(requestId, sessionId);
-            int total = qaLogDetailMapper.total(sessionId);
-            int pageSize = request.getPageSize();
-            int current = index / pageSize + 1;
-            int offset = (index / pageSize) * pageSize;
-            List<QuestionAnswerLogDetail> currentPageItems = qaLogDetailMapper.queryByPage(sessionId, offset, pageSize);
-            List<QaLogDetailResponse> items = currentPageItems.stream().map(QaLogDetailResponse::new).toList();
-            return new PageItemsResponse<>(items, total, current, pageSize);
+            current = index / pageSize + 1;
+            offset = (index / pageSize) * pageSize;
         }
+        List<QuestionAnswerLogDetail> currentPageItems = qaLogDetailMapper.queryByPage(sessionId, offset, pageSize);
+        List<QaLogDetailResponse> items = currentPageItems.stream().map(QaLogDetailResponse::new).toList();
+        return new PageItemsResponse<>(items, total, current, pageSize);
     }
 }
