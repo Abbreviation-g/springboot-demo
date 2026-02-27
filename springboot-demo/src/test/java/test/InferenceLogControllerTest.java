@@ -27,8 +27,10 @@ public class InferenceLogControllerTest {
     protected MockMvc mockMvc;
     @Test
     public void testBySession() throws Exception {
+        String token = LoginUtils.login(mockMvc);
         MvcResult mvcResult = mockMvc.perform(
                         MockMvcRequestBuilders.get("/inference/log/detail")
+                                .header("satoken", token)
                                 .param("sessionId", "session_id_1")
                                 .param("pageNo", "1")
                                 .param("pageSize", "10")
