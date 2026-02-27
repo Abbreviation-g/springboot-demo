@@ -56,3 +56,22 @@ CREATE TABLE IF NOT EXISTS `t_user` (
 /*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
 /*!40014 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
+
+-- db_spring_demo.qa_log_detail definition
+
+CREATE TABLE `qa_log_detail` (
+     `request_id` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+     `session_id` varchar(64) DEFAULT NULL,
+     `user_id` varchar(64) DEFAULT NULL,
+     `question` text,
+     `answer` text,
+     `service_cards` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci COMMENT '核心业务卡片列表 (用于前端突出展示事项入口)',
+     `references` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci COMMENT '文本引用来源列表 (对应文中的 [1][2]...)',
+     `options` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci COMMENT '澄清选项列表 (当意图不明确时提供)',
+     `suggestions` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci COMMENT '推荐问题列表 (回答后自动生成)',
+     `request_time` datetime DEFAULT NULL,
+     `deleted` tinyint(1) DEFAULT '0' COMMENT '是否被删除，默认false',
+     `deleted_by_user` tinyint(1) DEFAULT '0' COMMENT '是否被问答前端用户删除',
+     PRIMARY KEY (`request_id`),
+     UNIQUE KEY `request_id` (`request_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='对话问答详情，保存chat接口的完整返回值';
