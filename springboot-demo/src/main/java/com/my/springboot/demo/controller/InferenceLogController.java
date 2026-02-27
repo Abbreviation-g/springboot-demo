@@ -1,5 +1,6 @@
 package com.my.springboot.demo.controller;
 
+import cn.dev33.satoken.annotation.SaCheckPermission;
 import com.my.springboot.demo.dao.QaLogDetailMapper;
 import com.my.springboot.demo.entity.QuestionAnswerLogDetail;
 import com.my.springboot.demo.request.LogDetailRequest;
@@ -8,7 +9,9 @@ import com.my.springboot.demo.response.QaLogDetailResponse;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.ObjectUtils;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
@@ -30,6 +33,7 @@ public class InferenceLogController {
      *
      * @return
      */
+    @SaCheckPermission(value = {"log:query"})
     @GetMapping("/detail")
     public PageItemsResponse<QaLogDetailResponse> historyDetail(LogDetailRequest request) {
         String sessionId = request.getSessionId();
