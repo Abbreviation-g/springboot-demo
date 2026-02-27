@@ -43,4 +43,15 @@ public class PageItemsResponse<T> {
         this.setSize(size);
         this.setPages(total % size == 0 ? total / size : total / size + 1);
     }
+
+    /**
+     * 分页查询时计算分页的偏移量
+     *
+     * @param page
+     * @param size
+     * @return
+     */
+    public static int getOffset(int page, int size) {
+        return (page - 1) * size;
+    }
 }

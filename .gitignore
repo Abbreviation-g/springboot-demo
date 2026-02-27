@@ -25,3 +25,4 @@ hs_err_pid*
 /springboot-demo/target
 /springboot-demo/.classpath
 /springboot-demo/.project
+/**/.idea/
