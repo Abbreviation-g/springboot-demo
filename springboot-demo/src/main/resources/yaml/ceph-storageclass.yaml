@@ -1,0 +1,22 @@
+allowVolumeExpansion: {allowVolumeExpansion}
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  labels:
+    app: {app}
+    managed-by: {managedBy}
+  name: {storageClassName}
+parameters:
+  clusterID: {clusterID}
+  csi.storage.k8s.io/controller-expand-secret-name: {csi.storage.k8s.io/controller-expand-secret-name}
+  csi.storage.k8s.io/controller-expand-secret-namespace: {csi.storage.k8s.io/controller-expand-secret-namespace}
+  csi.storage.k8s.io/fstype: {csi.storage.k8s.io/fstype}
+  csi.storage.k8s.io/node-stage-secret-name: {csi.storage.k8s.io/node-stage-secret-name}
+  csi.storage.k8s.io/node-stage-secret-namespace: {csi.storage.k8s.io/node-stage-secret-namespace}
+  csi.storage.k8s.io/provisioner-secret-name: {csi.storage.k8s.io/provisioner-secret-name}
+  csi.storage.k8s.io/provisioner-secret-namespace: {csi.storage.k8s.io/provisioner-secret-namespace}
+  imageFeatures: {imageFeatures}
+  pool: {cephPoolName}
+provisioner: {provisioner}
+reclaimPolicy: {reclaimPolicy}
+volumeBindingMode: {volumeBindingMode}
