@@ -5,8 +5,6 @@ spring:
     name: grpc-client
 
 grpc:
-  server:
-    port: 9091
   client:
     #@GrpcClient注解需要和下面的grpc-server一致
     grpc-server:

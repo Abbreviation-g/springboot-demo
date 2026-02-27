@@ -65,20 +65,6 @@
                 </configuration>
             </plugin>
 
-            <!-- 清理插件 -->
-            <!--            <plugin>-->
-            <!--                <groupId>org.apache.maven.plugins</groupId>-->
-            <!--                <artifactId>maven-clean-plugin</artifactId>-->
-            <!--                <version>3.13.0</version>-->
-            <!--                <configuration>-->
-            <!--                    <filesets>-->
-            <!--                        <fileset>-->
-            <!--                            <directory>${project.build.directory}/generated-sources</directory>-->
-            <!--                        </fileset>-->
-            <!--                    </filesets>-->
-            <!--                </configuration>-->
-            <!--            </plugin>-->
-
             <!-- Protobuf 编译插件 -->
             <plugin>
                 <groupId>org.xolstice.maven.plugins</groupId>
