@@ -1,0 +1,57 @@
+syntax = "proto3";
+
+package api.user;
+
+import "api/common/result.proto";
+import "api/common/page.proto";
+
+option java_package = "com.ljm.boot.grpc.api.user"; //包名
+option java_outer_classname = "UserServiceProto"; //编译后的类名
+option java_multiple_files = true; //生成多个文件
+
+// 接口类
+service UserServiceApi {
+  rpc login (LoginInfoDTO) returns (LoginResultVo);
+  rpc selectUserList(QueryDTO)returns (PageResultVo);
+
+}
+
+// 请求参数
+message LoginInfoDTO {
+  string username = 1;
+  string password=2;
+}
+
+// 返回结果
+message LoginResultVo {
+  api.common.Result result = 1; // 状态信息
+  UserInfo data = 2; // 数据
+}
+
+// UserLogin DTO
+message UserInfo {
+  string token = 1; // token信息
+  int32 id = 2; // 用户Id
+}
+
+message RUser{
+  int32 id = 1;
+  string username = 2;
+  string password = 3;
+  string email = 4;
+  int32 age = 5;
+}
+
+message QueryDTO{
+  string username=1;
+  int32 age=2;
+  api.common.PageQuery page=3;
+}
+
+message PageResultVo{
+  api.common.Result result = 1; // 状态信息
+  api.common.PageResult page=2; //分页信息
+  repeated RUser data = 3; // 数据
+}
+
+

@@ -1,0 +1,18 @@
+server:
+  port: 8772
+spring:
+  application:
+    name: grpc-client
+
+grpc:
+  server:
+    port: 9091
+  client:
+    #@GrpcClient注解需要和下面的grpc-server一致
+    grpc-server:
+      #grpc服务端的调用地址
+      address: 'static://127.0.0.1:9092'
+      enable-keep-alive: true
+      keep-alive-without-calls: true
+      #传输类型设置为明文
+      negotiation-type: plaintext

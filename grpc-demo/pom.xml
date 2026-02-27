@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <packaging>pom</packaging>
+
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>3.2.9</version>
+        <relativePath/>
+    </parent>
+    <groupId>com.my.learning</groupId>
+    <artifactId>grpc-parent</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+    <name>grpc-parent</name>
+
+    <properties>
+        <java.version>21</java.version>
+        <spring-boot.version>3.2.9</spring-boot.version>
+
+        <!-- 自定义grpc api模块版本-->
+        <grpc-api.version>0.0.1-SNAPSHOT</grpc-api.version>
+    </properties>
+
+    <modules>
+        <module>grpc-api</module>
+        <module>grpc-server</module>
+        <module>grpc-client</module>
+    </modules>
+
+    <dependencyManagement>
+        <dependencies>
+            <!-- SpringBoot 版本管理 -->
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-dependencies</artifactId>
+                <version>${spring-boot.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+</project>
