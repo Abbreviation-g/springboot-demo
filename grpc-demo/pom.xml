@@ -18,6 +18,7 @@
     <properties>
         <java.version>21</java.version>
         <spring-boot.version>3.2.9</spring-boot.version>
+        <spring-cloud-alibaba.version>2023.0.3.3</spring-cloud-alibaba.version>
 
         <!-- 自定义grpc api模块版本-->
         <grpc-api.version>0.0.1-SNAPSHOT</grpc-api.version>
@@ -32,10 +33,18 @@
     <dependencyManagement>
         <dependencies>
             <!-- SpringBoot 版本管理 -->
+<!--            <dependency>-->
+<!--                <groupId>org.springframework.boot</groupId>-->
+<!--                <artifactId>spring-boot-dependencies</artifactId>-->
+<!--                <version>${spring-boot.version}</version>-->
+<!--                <type>pom</type>-->
+<!--                <scope>import</scope>-->
+<!--            </dependency>-->
+            <!-- SpringAlibaba 版本管理 -->
             <dependency>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-dependencies</artifactId>
-                <version>${spring-boot.version}</version>
+                <groupId>com.alibaba.cloud</groupId>
+                <artifactId>spring-cloud-alibaba-dependencies</artifactId>
+                <version>${spring-cloud-alibaba.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>

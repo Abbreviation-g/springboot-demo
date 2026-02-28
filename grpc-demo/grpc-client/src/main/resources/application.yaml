@@ -3,14 +3,24 @@ server:
 spring:
   application:
     name: grpc-client
+  cloud:
+    nacos:
+      discovery:
+        server-addr: 127.0.0.1:8848
+        namespace: grpc-demo
 
+#grpc:
+#  client:
+#    #@GrpcClient注解需要和下面的grpc-server一致
+#    grpc-server:
+#      #grpc服务端的调用地址
+#      address: 'static://127.0.0.1:9092'
+#      enable-keep-alive: true
+#      keep-alive-without-calls: true
+#      #传输类型设置为明文
 grpc:
   client:
-    #@GrpcClient注解需要和下面的grpc-server一致
     grpc-server:
-      #grpc服务端的调用地址
-      address: 'static://127.0.0.1:9092'
-      enable-keep-alive: true
-      keep-alive-without-calls: true
-      #传输类型设置为明文
-      negotiation-type: plaintext
+      enableKeepAlive: true
+      keepAliveWithoutCalls: true
+      negotiationType: PLAINTEXT
