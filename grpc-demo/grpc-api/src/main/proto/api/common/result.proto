@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package api.common;
 
-option java_package = "com.ljm.boot.grpc.api.common"; //包名
+option java_package = "com.my.learning.grpc.api.common"; //包名
 option java_outer_classname = "ResultProto"; //编译后的类名
 option java_multiple_files = true; //生成多个文件
 

@@ -1,8 +1,8 @@
 package com.my.learning;
 
-import com.ljm.boot.grpc.api.common.PageQuery;
-import com.ljm.boot.grpc.api.common.PageResult;
-import com.ljm.boot.grpc.api.user.*;
+import com.my.learning.grpc.api.common.PageQuery;
+import com.my.learning.grpc.api.common.PageResult;
+import com.my.learning.grpc.api.user.*;
 import net.devh.boot.grpc.client.inject.GrpcClient;
 import org.springframework.beans.BeanUtils;
 import org.springframework.web.bind.annotation.PostMapping;

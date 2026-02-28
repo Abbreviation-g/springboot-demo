@@ -1,8 +1,9 @@
 package com.my.learning;
 
-import com.ljm.boot.grpc.api.common.PageResult;
-import com.ljm.boot.grpc.api.common.Result;
-import com.ljm.boot.grpc.api.user.*;
+
+import com.my.learning.grpc.api.common.PageResult;
+import com.my.learning.grpc.api.common.Result;
+import com.my.learning.grpc.api.user.*;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
 import org.springframework.util.StringUtils;
