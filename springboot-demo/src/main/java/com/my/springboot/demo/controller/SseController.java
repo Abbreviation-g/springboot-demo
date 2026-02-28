@@ -16,7 +16,10 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -53,6 +56,70 @@ public class SseController {
         Request httpRequest = new Request.Builder()
 //                .header("Accept", "audio/pcm")
                 .url("http://127.0.0.1:8763/sse/1")
+                .get()
+                .build();
+        factory.newEventSource(httpRequest, new TTSEventListener(emitter));
+        return emitter;
+    }
+
+    @GetMapping("/3")
+    public SseEmitter handleSse3() {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < 10; i++) {
+            if (i == 9) {
+                for (int j = 0; j < 9; j++) {
+                    sb.append(j);
+                }
+            } else {
+                for (int j = 0; j < 10; j++) {
+                    sb.append(j);
+                }
+            }
+        }
+
+        SseEmitter emitter = new SseEmitter();
+        executorService.execute(() -> {
+//            ByteArrayInputStream inputStream = new ByteArrayInputStream(sb.toString().getBytes());
+            InputStream inputStream = this.getClass().getClassLoader().getResourceAsStream("media/output.wav");
+            if (inputStream == null) {
+                throw new BusinessException(HttpStatus.INTERNAL_SERVER_ERROR.value(), "inputStream is null");
+            }
+            try{
+                byte[] buffer = new byte[10];
+                int length = 0;
+                while ((length = inputStream.read(buffer)) != -1) {
+                    if (length == buffer.length) {
+                        emitter.send(buffer, MediaType.APPLICATION_OCTET_STREAM);
+                    } else {
+                        byte[] data = new byte[length];
+                        System.arraycopy(buffer, 0, data, 0, length);
+                        emitter.send(data, MediaType.APPLICATION_OCTET_STREAM);
+                    }
+                    TimeUnit.SECONDS.sleep(1);
+                }
+            } catch (IOException | InterruptedException e) {
+                log.error("inputStream error", e);
+            } finally {
+                emitter.complete();
+                try {
+                    inputStream.close();
+                } catch (IOException e) {
+                    log.error("inputStream close error", e);
+                }
+            }
+        });
+        return emitter;
+    }
+
+    @GetMapping("/4")
+    public SseEmitter handleSse4() {
+        SseEmitter emitter = new SseEmitter();
+        final OkHttpClient okHttpClient = createClient();
+
+        EventSource.Factory factory = EventSources.createFactory(okHttpClient);
+        Request httpRequest = new Request.Builder()
+//                .header("Accept", "audio/pcm")
+                .url("http://127.0.0.1:8763/sse/3")
                 .get()
                 .build();
         factory.newEventSource(httpRequest, new TTSEventListener(emitter));
