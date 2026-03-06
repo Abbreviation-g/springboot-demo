@@ -15,7 +15,15 @@ spring:
       username: root
       password: password
       driver-class-name: com.mysql.cj.jdbc.Driver
-  
+   thymeleaf:
+      mode: HTML
+      cache: true
+      prefix: classpath:/templates/
+      encoding: UTF-8
+      suffix: .html
+      check-template-location: true
+      template-resolver-order: 1
+
 
 mybatis:
    mapperLocations: classpath:mapper/*.xml
