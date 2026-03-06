@@ -2,10 +2,7 @@ package com.my.springboot.demo.controller;
 
 import com.my.springboot.demo.utils.BusinessException;
 import lombok.extern.slf4j.Slf4j;
-import okhttp3.ConnectionPool;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.Response;
+import okhttp3.*;
 import okhttp3.sse.EventSource;
 import okhttp3.sse.EventSourceListener;
 import okhttp3.sse.EventSources;
@@ -84,7 +81,7 @@ public class SseController {
             if (inputStream == null) {
                 throw new BusinessException(HttpStatus.INTERNAL_SERVER_ERROR.value(), "inputStream is null");
             }
-            try{
+            try {
                 byte[] buffer = new byte[10];
                 int length = 0;
                 while ((length = inputStream.read(buffer)) != -1) {
@@ -126,8 +123,72 @@ public class SseController {
         return emitter;
     }
 
+    @GetMapping("/5")
+    public SseEmitter handleSse5() {
+        MediaType pcmMediaType =  MediaType.valueOf("audio/pcm");
+        SseEmitter emitter = new SseEmitter();
+        executorService.execute(() -> {
+//            ByteArrayInputStream inputStream = new ByteArrayInputStream(sb.toString().getBytes());
+            InputStream inputStream = this.getClass().getClassLoader().getResourceAsStream("media/output.wav");
+            if (inputStream == null) {
+                throw new BusinessException(HttpStatus.INTERNAL_SERVER_ERROR.value(), "inputStream is null");
+            }
+            try {
+                byte[] buffer = new byte[10];
+                int length = 0;
+                while ((length = inputStream.read(buffer)) != -1) {
+                    if (length == buffer.length) {
+                        emitter.send(buffer, pcmMediaType);
+                    } else {
+                        byte[] data = new byte[length];
+                        System.arraycopy(buffer, 0, data, 0, length);
+                        emitter.send(data, pcmMediaType);
+                    }
+                    TimeUnit.SECONDS.sleep(1);
+                }
+            } catch (IOException | InterruptedException e) {
+                log.error("inputStream error", e);
+            } finally {
+                emitter.complete();
+                try {
+                    inputStream.close();
+                } catch (IOException e) {
+                    log.error("inputStream close error", e);
+                }
+            }
+        });
+        return emitter;
+    }
+
+    @GetMapping("/6")
+    public SseEmitter handleSse6() {
+        SseEmitter emitter = new SseEmitter();
+        final OkHttpClient okHttpClient = createClient();
+
+        EventSource.Factory factory = EventSources.createFactory(okHttpClient);
+        Request httpRequest = new Request.Builder()
+//                .header("Accept", "audio/pcm")
+                .url("http://127.0.0.1:8763/sse/5")
+                .get()
+                .build();
+        factory.newEventSource(httpRequest, new TTSEventListener(emitter));
+        return emitter;
+    }
+
     public static OkHttpClient createClient() {
         OkHttpClient client = new OkHttpClient.Builder()
+                .addInterceptor(chain -> {
+                    Response originalResponse = chain.proceed(chain.request());
+                    String contentTypeHeader = originalResponse.header("Content-Type");
+                    if (contentTypeHeader != null && contentTypeHeader.startsWith("audio/pcm")) {
+                        // 创建一个新的 Response.Builder
+                        Response.Builder responseBuilder = originalResponse.newBuilder();
+                        // 将 Content-Type 修改为通用的二进制流类型
+                        responseBuilder.header("Content-Type", "application/octet-stream");
+                        return responseBuilder.build();
+                    }
+                    return originalResponse;
+                })
                 .connectionPool(new ConnectionPool(30, 100, TimeUnit.SECONDS))
                 .connectTimeout(15, TimeUnit.SECONDS)
                 .writeTimeout(15, TimeUnit.SECONDS)
