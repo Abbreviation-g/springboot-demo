@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>发送字节数组和字符串</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        input[type="text"], textarea {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+        }
+        button {
+            padding: 10px 15px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        #result {
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .success { background-color: #d4edda; color: #155724; }
+        .error { background-color: #f8d7da; color: #721c24; }
+    </style>
+</head>
+<body>
+
+<h1>发送字节数组和字符串参数</h1>
+
+<form id="uploadForm">
+    <div class="form-group">
+        <label for="stringParam1">字符串参数 1:</label>
+        <input type="text" id="stringParam1" name="stringParam1" value="Hello From Frontend" required>
+    </div>
+
+    <div class="form-group">
+        <label for="stringParam2">字符串参数 2:</label>
+        <input type="text" id="stringParam2" name="stringParam2" value="Some Value" required>
+    </div>
+
+    <div class="form-group">
+        <label for="byteDataInput">要发送的文本 (将被转换为字节数组):</label>
+        <textarea id="byteDataInput" rows="4" cols="50" placeholder="请输入一些文本，它将被转换为字节数组发送">This is a test binary data. 你好世界.</textarea>
+    </div>
+
+    <button type="submit">发送数据</button>
+</form>
+
+<div id="result"></div>
+
+<script>
+    document.getElementById('uploadForm').addEventListener('submit', async (event) => {
+        event.preventDefault(); // 阻止表单默认提交行为
+
+        const resultDiv = document.getElementById('result');
+        resultDiv.className = '';
+        resultDiv.textContent = '';
+
+        try {
+            // 1. 获取表单中的字符串值
+            const stringParam1 = document.getElementById('stringParam1').value;
+            const stringParam2 = document.getElementById('stringParam2').value;
+
+            // 2. 获取文本输入，并将其转换为字节数组
+            const textToConvert = document.getElementById('byteDataInput').value;
+            const encoder = new TextEncoder(); // 使用 TextEncoder 将字符串转为 UTF-8 字节数组
+            const byteArray = encoder.encode(textToConvert);
+
+            // 3. 创建 FormData 对象来组织数据
+            const formData = new FormData();
+
+            // 将字节数组包装成 Blob，并添加到 FormData 中
+            // 注意：'byteData' 必须与后端 @RequestParam("byteData") 的名称一致
+            const blob = new Blob([byteArray], { type: 'application/octet-stream' });
+            formData.append('byteData', blob, 'data.bin'); // 'data.bin' 是一个虚拟文件名
+
+            // 添加字符串参数到 FormData
+            formData.append('stringParam1', stringParam1);
+            formData.append('stringParam2', stringParam2);
+
+            // 4. 发送请求
+            const response = await fetch('/upload', { // 确保 URL 与后端端点匹配
+                method: 'POST',
+                body: formData // 注意：不要手动设置 Content-Type，让浏览器自动设置 multipart/form-data
+            });
+
+            if (response.ok) {
+                const responseBody = await response.text();
+                resultDiv.className = 'success';
+                resultDiv.textContent = '请求成功: ' + responseBody;
+            } else {
+                const errorMessage = await response.text();
+                resultDiv.className = 'error';
+                resultDiv.textContent = '请求失败: ' + errorMessage;
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            resultDiv.className = 'error';
+            resultDiv.textContent = '发生错误: ' + error.message;
+        }
+    });
+</script>
+
+</body>
+</html>
