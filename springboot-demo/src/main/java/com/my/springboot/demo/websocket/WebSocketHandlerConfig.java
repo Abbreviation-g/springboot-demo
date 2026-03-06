@@ -3,12 +3,7 @@ package com.my.springboot.demo.websocket;
 import jakarta.annotation.Resource;
 import okhttp3.ConnectionPool;
 import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.WebSocket;
-import okio.ByteString;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.web.socket.client.WebSocketClient;
 import org.springframework.web.socket.config.annotation.EnableWebSocket;
 import org.springframework.web.socket.config.annotation.WebSocketConfigurer;
 import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistry;
@@ -22,6 +17,10 @@ public class WebSocketHandlerConfig implements WebSocketConfigurer {
     private TextWebSocketHandlerV1 handlerV1;
     @Resource
     private TextWebSocketHandlerV2 handlerV2;
+    @Resource
+    private BinaryWebSocketHandlerV1 handlerBinaryV1;
+    @Resource
+    private BinaryWebSocketHandlerV2 handlerBinaryV2;
 
     @Override
     public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
@@ -31,6 +30,12 @@ public class WebSocketHandlerConfig implements WebSocketConfigurer {
         registry.addHandler(handlerV1, "/websocket/v1")
                 .setAllowedOrigins("*");
         registry.addHandler(handlerV2, "/websocket/v2")
+                .setAllowedOrigins("*");
+
+        handlerBinaryV1.setOkHttpClient(webSocketClient);
+        registry.addHandler(handlerBinaryV1, "/websocket/binary/v1")
+                .setAllowedOrigins("*");
+        registry.addHandler(handlerBinaryV2, "/websocket/binary/v2")
                 .setAllowedOrigins("*");
     }
 

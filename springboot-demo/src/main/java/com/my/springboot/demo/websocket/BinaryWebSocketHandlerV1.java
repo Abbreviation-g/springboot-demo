@@ -1,13 +1,14 @@
 package com.my.springboot.demo.websocket;
 
-import com.alibaba.fastjson.JSONObject;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 import okhttp3.WebSocket;
+import okio.ByteString;
 import org.springframework.stereotype.Component;
+import org.springframework.web.socket.BinaryMessage;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
@@ -19,7 +20,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @Component
 @Slf4j
-public class TextWebSocketHandlerV1 extends AbstractWebSocketHandler {
+public class BinaryWebSocketHandlerV1 extends AbstractWebSocketHandler {
     @Setter
     private OkHttpClient okHttpClient;
 
@@ -28,11 +29,11 @@ public class TextWebSocketHandlerV1 extends AbstractWebSocketHandler {
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
-        log.info("TextWebSocketHandlerV1, session={}", session.getId());
+        log.info("BinaryWebsocketV1, session={}", session.getId());
 
         if (!sourceTargetMap.containsKey(session)) {
-            Request request = new Request.Builder().url("ws://127.0.0.1:8763/websocket/v2").build();
-            WebSocket ws = okHttpClient.newWebSocket(request, new MyWebSocketListener());
+            Request request = new Request.Builder().url("ws://127.0.0.1:8763/websocket/binary/v2").build();
+            WebSocket ws = okHttpClient.newWebSocket(request, new MyBinaryWebSocketListener());
             sourceTargetMap.put(session, ws);
             targetSourceMap.put(ws, session);
         }
@@ -40,7 +41,7 @@ public class TextWebSocketHandlerV1 extends AbstractWebSocketHandler {
 
     @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) throws Exception {
-        log.info("TextWebSocketHandlerV1, session={}, status={}", session.getId(), status);
+        log.info("BinaryWebsocketV1, session={}, status={}", session.getId(), status);
         if (sourceTargetMap.containsKey(session)) {
             WebSocket target = sourceTargetMap.get(session);
             target.close(1000, "Goodbye, WebSocket!");
@@ -50,28 +51,26 @@ public class TextWebSocketHandlerV1 extends AbstractWebSocketHandler {
     }
 
     @Override
-    protected void handleTextMessage(WebSocketSession session, TextMessage message) throws IOException {
-        log.info("TextWebSocketHandlerV1, message={}", message.getPayload());
-        JSONObject jsonObject = new JSONObject();
-        jsonObject.put("message", message.getPayload());
-        jsonObject.put("time", System.currentTimeMillis());
-        jsonObject.put("from", "v1");
+    protected void handleBinaryMessage(WebSocketSession session, BinaryMessage message) throws IOException {
+        byte[] data = message.getPayload().array();
+        log.info("BinaryWebsocketV1, data.length={}", data.length);
 
         if (sourceTargetMap.containsKey(session)) {
             WebSocket target = sourceTargetMap.get(session);
-            target.send(jsonObject.toJSONString());
+            ByteString sendData = ByteString.of(data);
+            target.send(sendData);
         }
     }
 
-    private class MyWebSocketListener extends okhttp3.WebSocketListener {
+    private class MyBinaryWebSocketListener extends okhttp3.WebSocketListener {
         @Override
         public void onOpen(WebSocket webSocket, Response response) {
-            log.info("MyWebSocketListener, onOpen");
+            log.info("MyBinaryWebSocketListener, onOpen");
         }
 
         @Override
         public void onMessage(WebSocket webSocket, String text) {
-            log.info("MyWebSocketListener, onMessage, text={}", text);
+            log.info("MyBinaryWebSocketListener, onMessage, text={}", text);
             if (targetSourceMap.containsKey(webSocket)) {
                 WebSocketSession source = targetSourceMap.get(webSocket);
                 try {
@@ -84,7 +83,7 @@ public class TextWebSocketHandlerV1 extends AbstractWebSocketHandler {
 
         @Override
         public void onClosing(WebSocket webSocket, int code, String reason) {
-            log.info("MyWebSocketListener, onClosing, code={}, reason={}", code, reason);
+            log.info("MyBinaryWebSocketListener, onClosing, code={}, reason={}", code, reason);
         }
     }
 }
