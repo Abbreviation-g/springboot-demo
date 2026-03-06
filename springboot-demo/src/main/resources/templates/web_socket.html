@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebSocket 客户端示例</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        #messages {
+            border: 1px solid #ccc;
+            height: 400px;
+            overflow-y: scroll;
+            padding: 10px;
+            background-color: #f9f9f9;
+        }
+        .message {
+            margin-bottom: 5px;
+            padding: 5px;
+            background-color: #fff;
+            border-radius: 3px;
+        }
+        .status {
+            color: green;
+        }
+        .error {
+            color: red;
+        }
+        .info {
+            color: blue;
+        }
+        input[type="text"] {
+            width: 70%;
+            padding: 8px;
+        }
+        button {
+            padding: 8px 15px;
+            margin-left: 5px;
+        }
+    </style>
+</head>
+<body>
+
+<h1>WebSocket 测试页面</h1>
+<p>连接到 WebSocket 服务器并收发消息。</p>
+
+<div>
+    <input type="text" id="messageInput" placeholder="输入要发送的消息...">
+    <button id="sendBtn">发送消息</button>
+    <button id="connectBtn">连接</button>
+    <button id="disconnectBtn">断开</button>
+</div>
+
+<h2>日志:</h2>
+<div id="messages"></div>
+
+<script>
+    let socket = null;
+    const messagesDiv = document.getElementById('messages');
+    const messageInput = document.getElementById('messageInput');
+    const sendBtn = document.getElementById('sendBtn');
+    const connectBtn = document.getElementById('connectBtn');
+    const disconnectBtn = document.getElementById('disconnectBtn');
+
+    function addMessage(text, className = '') {
+        const messageElement = document.createElement('div');
+        messageElement.className = `message ${className}`;
+        messageElement.textContent = `${new Date().toLocaleTimeString()} - ${text}`;
+        messagesDiv.appendChild(messageElement);
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    }
+
+    function connect() {
+        if (socket && socket.readyState === WebSocket.OPEN) {
+            addMessage('WebSocket 已经处于连接状态。', 'error');
+            return;
+        }
+
+        // 假设你的后端 WebSocket 端点是 ws://localhost:8080/ws
+        // 如果使用了 SockJS，URL 应该是 http://localhost:8080/ws-endpoint
+        const wsUri = 'ws://localhost:8763/websocket/v1'; // 请根据你的后端地址修改
+
+        addMessage('正在尝试连接到 ' + wsUri + ' ...', 'status');
+
+        try {
+            socket = new WebSocket(wsUri);
+
+            socket.onopen = function(event) {
+                addMessage('WebSocket 连接已建立。', 'status');
+                connectBtn.disabled = true;
+                disconnectBtn.disabled = false;
+            };
+
+            socket.onmessage = function(event) {
+                addMessage(`收到消息: ${event.data}`, 'info');
+            };
+
+            socket.onclose = function(event) {
+                addMessage(`WebSocket 连接已关闭。代码: ${event.code}, 原因: ${event.reason}`, 'status');
+                connectBtn.disabled = false;
+                disconnectBtn.disabled = true;
+            };
+
+            socket.onerror = function(error) {
+                addMessage(`WebSocket 发生错误: ${error.message}`, 'error');
+                console.error('WebSocket Error:', error);
+            };
+
+        } catch (e) {
+            addMessage(`连接失败: ${e.message}`, 'error');
+            console.error('WebSocket Creation Error:', e);
+        }
+    }
+
+    function disconnect() {
+        if (socket) {
+            socket.close();
+        }
+    }
+
+    function sendMessage() {
+        if (!socket || socket.readyState !== WebSocket.OPEN) {
+            addMessage('WebSocket 未连接，无法发送消息。', 'error');
+            return;
+        }
+
+        const message = messageInput.value.trim();
+        if (message) {
+            socket.send(message);
+            addMessage(`发送消息: ${message}`, 'status');
+            messageInput.value = ''; // 清空输入框
+        }
+    }
+
+    // 为按钮添加事件监听器
+    connectBtn.onclick = connect;
+    disconnectBtn.onclick = disconnect;
+    sendBtn.onclick = sendMessage;
+
+    // 按 Enter 键发送消息
+    messageInput.addEventListener('keypress', function(event) {
+        if (event.key === 'Enter') {
+            sendMessage();
+        }
+    });
+
+</script>
+
+</body>
+</html>
