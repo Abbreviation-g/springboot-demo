@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SSE 一次性请求示例</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+
+        #messages {
+            border: 1px solid #ccc;
+            height: 400px;
+            overflow-y: scroll;
+            padding: 10px;
+            background-color: #f9f9f9;
+        }
+
+        .message {
+            margin-bottom: 5px;
+            padding: 5px;
+            background-color: #fff;
+            border-radius: 3px;
+        }
+
+        .status {
+            color: green;
+        }
+
+        .error {
+            color: orange; /* 区分连接错误和正常结束 */
+        }
+    </style>
+</head>
+<body>
+
+<h1>SSE 一次性请求测试</h1>
+<p>点击按钮，请求一次 /sse/1，接收完所有消息后连接自动断开。</p>
+
+<div>
+    <button id="startBtn">开始请求</button>
+    <!-- 不再需要停止按钮，因为连接会自动断开 -->
+    <button id="stopBtn">停止连接</button>
+</div>
+
+<h2>接收的消息:</h2>
+<div id="messages"></div>
+
+<script>
+    let eventSource = null;
+    const messagesDiv = document.getElementById('messages');
+    const startBtn = document.getElementById('startBtn');
+    const stopBtn = document.getElementById('stopBtn');
+
+    function addMessage(text, className = '') {
+        const messageElement = document.createElement('div');
+        messageElement.className = `message ${className}`;
+        messageElement.textContent = `${new Date().toLocaleTimeString()} - ${text}`;
+        messagesDiv.appendChild(messageElement);
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    }
+
+    function startSSEConnection() {
+        addMessage('正在请求 /sse/1...', 'status');
+
+        // 每次点击都创建一个新的 EventSource
+        eventSource = new EventSource('/sse/1');
+
+        eventSource.onopen = function (event) {
+            addMessage('SSE 连接已建立，开始接收消息...', 'status');
+        };
+
+        eventSource.onmessage = function (event) {
+            const serverData = event.data;
+            addMessage(`收到消息: ${serverData}`);
+        };
+
+        // 关键：监听 error 事件来判断连接何时断开
+        eventSource.onerror = function (event) {
+            // 当服务器关闭连接或网络中断时，会触发 onerror
+            // 我们可以通过检查 readyState 来区分是错误还是正常关闭
+
+            if (eventSource.readyState === EventSource.CLOSED) {
+                // 这通常意味着服务器主动关闭了连接，即所有消息已发送完毕
+                addMessage('服务器已发送完所有消息，连接已关闭。', 'error');
+            } else if (eventSource.readyState === EventSource.CONNECTING) {
+                // 这表示连接断开后正在尝试重连（SSE 默认行为）
+                // 如果你想禁止重连，可以在后端关闭连接前做一些标记
+                // 或者在这里立即关闭 eventSource
+                eventSource.close();
+                addMessage('连接断开，尝试重连被阻止。', 'error');
+            }
+            // 如果是 CONNECTING 状态，SSE 会自动重连，直到达到最大重试次数或连接恢复
+            // 但我们期望的是服务器关闭，状态变为 CLOSED。
+        };
+
+        // 为了确保资源被释放，我们也可以设置一个较短的超时
+        // 来手动关闭连接（如果后端没有正确关闭）
+        setTimeout(() => {
+            if (eventSource.readyState === EventSource.OPEN || eventSource.readyState === EventSource.CONNECTING) {
+                addMessage('请求超时，手动关闭连接。', 'error');
+                eventSource.close();
+            }
+        }, 30000); // 30秒超时
+    }
+
+    /**
+     * 停止 SSE 连接
+     */
+    function stopSSEConnection() {
+        if (eventSource) {
+            eventSource.close(); // 关闭连接
+            eventSource = null; // 清空引用
+            addMessage('SSE 连接已手动关闭。', 'status');
+        } else {
+            addMessage('没有活动的连接可以关闭。', 'error');
+        }
+    }
+
+    startBtn.onclick = startSSEConnection;
+    stopBtn.onclick = stopSSEConnection;
+
+</script>
+
+</body>
+</html>

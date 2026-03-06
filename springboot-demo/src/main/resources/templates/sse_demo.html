@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>SSE Demo</title>
+</head>
+<body>
+<h1>Server-Sent Events Demo</h1>
+<label for="message">sse result:</label><textarea id="message" rows="20" cols="50"></textarea>
+<label for="sse_path">sse path:</label><input type="text" id="sse_path" value="/sse/1"/>
+<button onclick="startSSE()">Start SSE</button>
+<button onclick="stopSSE()">Stop SSE</button>
+<script>
+    let eventSource;
+    function startSSE(){
+        let ssePath = document.getElementById("sse_path").value;
+        const messagesDiv = document.getElementById("message");
+        messagesDiv.value = "";
+        eventSource = new EventSource(ssePath);
+
+        eventSource.onmessage = function(event) {
+            messagesDiv.value += event.data;
+        };
+
+        eventSource.onerror = function(event) {
+            console.error("EventSource failed.", event);
+        };
+    }
+    function stopSSE(){
+        eventSource.close()
+    }
+
+</script>
+</body>
+</html>

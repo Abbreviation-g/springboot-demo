@@ -38,6 +38,7 @@ public class SseController {
                 }
                 emitter.complete();
             } catch (IOException | InterruptedException e) {
+                log.error("send error", e);
                 emitter.completeWithError(e);
             }
         });
