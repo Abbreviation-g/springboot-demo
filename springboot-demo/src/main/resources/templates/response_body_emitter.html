@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ResponseBodyEmitter 一次性请求示例</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+
+        #messages {
+            border: 1px solid #ccc;
+            height: 400px;
+            overflow-y: scroll;
+            padding: 10px;
+            background-color: #f9f9f9;
+        }
+
+        .message {
+            margin-bottom: 5px;
+            padding: 5px;
+            background-color: #fff;
+            border-radius: 3px;
+        }
+
+        .status {
+            color: green;
+        }
+
+        .error {
+            color: orange; /* 区分连接错误和正常结束 */
+        }
+    </style>
+</head>
+<body>
+
+<h1>SSE 一次性请求测试</h1>
+<p>点击按钮，请求一次 /sse/1，接收完所有消息后连接自动断开。</p>
+
+<div>
+    <button id="startBtn">开始请求</button>
+    <!-- 不再需要停止按钮，因为连接会自动断开 -->
+    <button id="stopBtn">停止连接</button>
+</div>
+
+<h2>接收的消息:</h2>
+<div id="messages"></div>
+
+<script>
+    let eventSource = null;
+    const messagesDiv = document.getElementById('messages');
+    const startBtn = document.getElementById('startBtn');
+    const stopBtn = document.getElementById('stopBtn');
+
+    async function streamFetch() {
+        try {
+            const response = await fetch('http://127.0.0.1:8763/sse3/forward', {
+                method: 'GET', // 或 POST
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            // 获取流读取器
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder('utf-8');
+
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+
+                // 把二进制流转成字符串
+                const chunk = decoder.decode(value, { stream: true });
+
+                console.log('后端返回的片段：', chunk);
+                // 在这里渲染到页面：
+                // document.getElementById('content').innerHTML += chunk;
+            }
+
+        } catch (err) {
+            console.error('流接收失败', err);
+        }
+    }
+
+    streamFetch();
+
+</script>
+
+</body>
+</html>
