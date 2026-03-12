@@ -32,9 +32,9 @@ public class SseController {
         SseEmitter emitter = new SseEmitter();
         executorService.execute(() -> {
             try {
-                for (int i = 0; i < 10; i++) {
+                for (int i = 0; i < 10*1000; i++) {
                     emitter.send("Message " + i, MediaType.TEXT_PLAIN);
-                    TimeUnit.SECONDS.sleep(1);
+                    TimeUnit.MICROSECONDS.sleep(50);
                 }
                 emitter.complete();
             } catch (IOException | InterruptedException e) {

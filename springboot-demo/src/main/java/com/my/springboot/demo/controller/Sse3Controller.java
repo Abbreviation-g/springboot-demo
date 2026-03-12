@@ -11,6 +11,7 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.io.IOException;
 import java.util.Base64;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -24,7 +25,7 @@ public class Sse3Controller {
     public ResponseBodyEmitter forward() {
         ResponseBodyEmitter emitter = new ResponseBodyEmitter();
         WebClient webclient = WebClient.create();
-        new Thread(() -> {
+        CompletableFuture.runAsync(() -> {
             try {
                 webclient.get()
                         .uri("http://127.0.0.1:8763/sse3/stream")
@@ -33,17 +34,17 @@ public class Sse3Controller {
                         .subscribe(bytes -> {
                                     try {
                                         emitter.send(bytes);
-
                                     } catch (Exception e) {
                                         log.error("", e);
                                         emitter.completeWithError(e);
                                     }
-                                }, e -> emitter.completeWithError(e)
-                                , emitter::complete);
+                                },
+                                emitter::completeWithError,
+                                emitter::complete);
             } catch (Exception e) {
                 emitter.completeWithError(e);
             }
-        }).start();
+        });
         return emitter;
     }
 
@@ -85,7 +86,7 @@ public class Sse3Controller {
                     String data = "数据块" + i + ",";
                     data = data.repeat(10);
                     byte[] bytes = data.getBytes();
-//                    bytes = Base64.getEncoder().encode(bytes);
+                    bytes = Base64.getEncoder().encode(bytes);
                     emitter.send(bytes);
                     TimeUnit.MICROSECONDS.sleep(10);
                 } catch (Exception e) {

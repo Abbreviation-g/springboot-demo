@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>播放 24000Hz PCM 音频</title>
+</head>
+<body>
+<h1>播放 24000Hz 16-bit 单声道 PCM 音频</h1>
+<button onclick="playPcmData()">播放音频</button>
+
+<script>
+    // 假设这是你从前端接收到的 PCM 字节数组
+    // 为了演示，这里模拟一个 24kHz 的 PCM 数据
+    // 例如，生成一个 1 秒的正弦波
+    function generateMockPcmData() {
+        const sampleRate = 24000;
+        const duration = 1; // 1秒
+        const frequency = 440; // A4 音符的频率
+        const numSamples = sampleRate * duration;
+        const buffer = new ArrayBuffer(numSamples * 2); // 16-bit = 2 bytes per sample
+        const view = new DataView(buffer);
+
+        for (let i = 0; i < numSamples; i++) {
+            // 生成一个正弦波样本
+            const time = i / sampleRate;
+            const sample = Math.sin(2 * Math.PI * frequency * time);
+            // 转换为 16-bit 整数 (-32768 to 32767)
+            const int16Sample = sample * 32767;
+            view.setInt16(i * 2, int16Sample, true); // true 表示小端字节序
+        }
+        return new Uint8Array(buffer);
+    }
+
+    /**
+     * 将 16-bit, 24kHz, 单声道的 PCM Uint8Array 转换并播放
+     * @param {Uint8Array} pcmData - 包含 PCM 数据的字节数组
+     */
+    async function playPcmFrom24kHz(pcmData) {
+        const originalSampleRate = 24000; // 你的 PCM 数据的采样率
+        const channels = 1; // 单声道
+
+        // 1. 创建 AudioContext
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+        // 2. 将 Int16 格式的 PCM 数据转换为 Float32Array
+        const float32Array = new Float32Array(pcmData.length / 2);
+        for (let i = 0; i < float32Array.length; i++) {
+            // 从 Uint8Array 中读取两个字节，组成一个 Int16
+            const int16 = (pcmData[i * 2 + 1] << 8) | pcmData[i * 2];
+            // 将 Int16 (-32768 to 32767) 转换为 Float32 (-1.0 to 1.0)
+            float32Array[i] = int16 / 32768.0;
+        }
+
+        // 3. 重采样：创建一个 OfflineAudioContext，其采样率与原始数据相同
+        //    将原始数据加载到一个临时 BufferSource，然后连接到 OfflineContext 的 destination
+        //    最后，OfflineContext 会以自身的采样率（即 AudioContext 的采样率）渲染音频，
+        //    这个过程就完成了从 24000Hz 到目标采样率的转换。
+        const offlineCtx = new OfflineAudioContext(
+            channels,
+            float32Array.length * (audioContext.sampleRate / originalSampleRate), // 计算重采样后的长度
+            originalSampleRate
+        );
+
+        // 创建一个与原始采样率匹配的 AudioBuffer
+        const sourceBuffer = offlineCtx.createBuffer(channels, float32Array.length, originalSampleRate);
+        sourceBuffer.copyToChannel(float32Array, 0, 0);
+
+        // 创建源节点并连接
+        const source = offlineCtx.createBufferSource();
+        source.buffer = sourceBuffer;
+        source.connect(offlineCtx.destination);
+        source.start();
+
+        // 4. 开始渲染（即重采样过程）
+        const resampledAudioBuffer = await offlineCtx.startRendering();
+
+        // 5. 播放重采样后的音频
+        const finalSource = audioContext.createBufferSource();
+        finalSource.buffer = resampledAudioBuffer; // 这个 buffer 现在已经是 audioContext.sampleRate 的采样率了
+        finalSource.connect(audioContext.destination);
+        finalSource.start();
+
+        console.log(`音频开始播放... (原始采样率: ${originalSampleRate}Hz, 目标采样率: ${audioContext.sampleRate}Hz)`);
+    }
+
+    // 主函数：接收并播放 PCM 数据
+    async function playPcmData() {
+        // 1. 获取 PCM 字节数组 (这里使用模拟数据)
+        const pcmByteArray = generateMockPcmData();
+        console.log("接收到的 PCM 数据长度:", pcmByteArray.length);
+
+        // 2. 播放音频
+        await playPcmFrom24kHz(pcmByteArray);
+    }
+</script>
+</body>
+</html>

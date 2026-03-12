@@ -36,23 +36,14 @@
 </head>
 <body>
 
-<h1>SSE 一次性请求测试</h1>
-<p>点击按钮，请求一次 /sse/1，接收完所有消息后连接自动断开。</p>
-
-<div>
-    <button id="startBtn">开始请求</button>
-    <!-- 不再需要停止按钮，因为连接会自动断开 -->
-    <button id="stopBtn">停止连接</button>
-</div>
-
 <h2>接收的消息:</h2>
 <div id="messages"></div>
 
 <script>
-    let eventSource = null;
-    const messagesDiv = document.getElementById('messages');
-    const startBtn = document.getElementById('startBtn');
-    const stopBtn = document.getElementById('stopBtn');
+    // let eventSource = null;
+    // const messagesDiv = document.getElementById('messages');
+    // const startBtn = document.getElementById('startBtn');
+    // const stopBtn = document.getElementById('stopBtn');
 
     async function streamFetch() {
         try {

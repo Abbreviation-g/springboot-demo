@@ -5,6 +5,9 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+
+import java.util.Map;
 
 @Controller
 @RequestMapping("/html")
@@ -18,8 +21,9 @@ public class ThymeleafEndpointController {
      * @return
      */
     @GetMapping("/{name}")
-    public String toWebSocketDemo(@PathVariable String name, Model model) {
+    public String toWebSocketDemo(@PathVariable String name, @RequestParam Map<String, Object> params, Model model) {
         model.addAttribute("time", System.currentTimeMillis());
+        model.addAttribute("params", params);
         return name;
     }
 }

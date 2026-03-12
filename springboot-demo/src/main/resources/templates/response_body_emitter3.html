@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ResponseBodyEmitter 一次性请求示例</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+
+        #messages {
+            border: 1px solid #ccc;
+            height: 400px;
+            overflow-y: scroll;
+            padding: 10px;
+            background-color: #f9f9f9;
+        }
+
+        .message {
+            margin-bottom: 5px;
+            padding: 5px;
+            background-color: #fff;
+            border-radius: 3px;
+        }
+
+        .status {
+            color: green;
+        }
+
+        .error {
+            color: orange; /* 区分连接错误和正常结束 */
+        }
+    </style>
+</head>
+<body>
+<button id="startBtn" onclick="streamFetch()">开始</button>
+<h2>接收的消息:</h2>
+<div id="messages"></div>
+
+<script>
+    // let eventSource = null;
+    // const messagesDiv = document.getElementById('messages');
+    // const startBtn = document.getElementById('startBtn');
+    // const stopBtn = document.getElementById('stopBtn');
+
+    async function streamFetch() {
+        try {
+            const response = await fetch('http://127.0.0.1:29188/ytj/inference/tts/stream', {
+                method: 'POST', // 或 POST
+                headers: {
+                    'Content-Type': 'application/json',
+                    'xtoken': 'df258510-bb77-400d-b4a8-a22acb13731f',
+                    'appId': '535571678175365'
+                },
+                body: JSON.stringify({
+                    "input": "这是流式语音合成测试，低延迟实时返回。",
+                    "voice": "vivian",
+                    "language": "Chinese",
+                    "instructions": "用非常开心兴奋的语气说"
+                })
+            });
+
+            // 获取流读取器
+            const reader = response.body.getReader();
+            while (true) {
+                const {done, value} = await reader.read();
+                if (done) {
+                    console.log('流已结束');
+                    break;
+                }
+                //TODO 进行数据处理
+
+                // 把二进制流转换为二进制数组
+                const bytes = new Uint8Array(value);
+                console.log('二进制数组：', bytes);
+                await playPcmFrom24kHz(bytes)
+
+                // const decoder = new TextDecoder('utf-8');
+                // 把二进制流转成字符串
+                // const chunk = decoder.decode(value, {stream: true});
+                // console.log('后端返回的片段：', chunk);
+                // 在这里渲染到页面：
+                // document.getElementById('content').innerHTML += chunk;
+            }
+
+        } catch (err) {
+            console.error('流接收失败', err);
+        }
+    }
+
+    /**
+     * 将 16-bit, 24kHz, 单声道的 PCM Uint8Array 转换并播放
+     * @param {Uint8Array} pcmData - 包含 PCM 数据的字节数组
+     */
+    async function playPcmFrom24kHz(pcmData) {
+        const originalSampleRate = 24000; // 你的 PCM 数据的采样率
+        const channels = 1; // 单声道
+
+        // 1. 创建 AudioContext
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+        // 2. 将 Int16 格式的 PCM 数据转换为 Float32Array
+        const float32Array = new Float32Array(pcmData.length / 2);
+        for (let i = 0; i < float32Array.length; i++) {
+            // 从 Uint8Array 中读取两个字节，组成一个 Int16
+            const int16 = (pcmData[i * 2 + 1] << 8) | pcmData[i * 2];
+            // 将 Int16 (-32768 to 32767) 转换为 Float32 (-1.0 to 1.0)
+            float32Array[i] = int16 / 32768.0;
+        }
+
+        // 3. 重采样：创建一个 OfflineAudioContext，其采样率与原始数据相同
+        //    将原始数据加载到一个临时 BufferSource，然后连接到 OfflineContext 的 destination
+        //    最后，OfflineContext 会以自身的采样率（即 AudioContext 的采样率）渲染音频，
+        //    这个过程就完成了从 24000Hz 到目标采样率的转换。
+        const offlineCtx = new OfflineAudioContext(
+            channels,
+            float32Array.length * (audioContext.sampleRate / originalSampleRate), // 计算重采样后的长度
+            originalSampleRate
+        );
+
+        // 创建一个与原始采样率匹配的 AudioBuffer
+        const sourceBuffer = offlineCtx.createBuffer(channels, float32Array.length, originalSampleRate);
+        sourceBuffer.copyToChannel(float32Array, 0, 0);
+
+        // 创建源节点并连接
+        const source = offlineCtx.createBufferSource();
+        source.buffer = sourceBuffer;
+        source.connect(offlineCtx.destination);
+        source.start();
+
+        // 4. 开始渲染（即重采样过程）
+        const resampledAudioBuffer = await offlineCtx.startRendering();
+
+        // 5. 播放重采样后的音频
+        const finalSource = audioContext.createBufferSource();
+        finalSource.buffer = resampledAudioBuffer; // 这个 buffer 现在已经是 audioContext.sampleRate 的采样率了
+        finalSource.connect(audioContext.destination);
+        finalSource.start();
+
+        console.log(`音频开始播放... (原始采样率: ${originalSampleRate}Hz, 目标采样率: ${audioContext.sampleRate}Hz)`);
+    }
+</script>
+
+</body>
+</html>

@@ -17,7 +17,7 @@ spring:
       driver-class-name: com.mysql.cj.jdbc.Driver
    thymeleaf:
       mode: HTML
-      cache: true
+      cache: false # 此属性默认在开发环境中为 true。将其设置为 false 后，Thymeleaf 每次请求页面时都会重新加载和解析模板文件，从而让你的修改立即生效。3.最后在每次修改静态内容时按Ctrl+Shift+F9即可重新加载
       prefix: classpath:/templates/
       encoding: UTF-8
       suffix: .html

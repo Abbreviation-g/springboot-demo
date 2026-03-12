@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>接收多值参数页面</title>
+</head>
+<body>
+<h1>接收到的 URL 参数 (多值)</h1>
+
+<!-- 假设你在 Controller 里额外加了一句: model.addAttribute("allDynamicParams", params); -->
+<h2>所有动态参数1:</h2>
+<ul>
+    <!-- 遍历 Controller 中传递过来的 params Map -->
+    <li th:each="paramEntry : ${params}"
+        th:text="${paramEntry.key} + ' = ' + ${paramEntry.value}"></li>
+</ul>
+
+<!-- 方式二：遍历所有动态参数 -->
+<h2>所有动态参数2:</h2>
+<ul th:if="${not #maps.isEmpty(params)}">
+    <li th:each="entry : ${params}"
+        th:text="${entry.key} + ' = ' + ${entry.value}"></li>
+</ul>
+<p th:unless="${not #maps.isEmpty(params)}">没有传递任何动态参数。</p>
+
+<!-- 方式二：以表格形式展示所有动态参数 -->
+<h2>所有动态参数333:</h2>
+<table th:if="${not #maps.isEmpty(params)}" border="1" style="border-collapse: collapse;">
+    <thead>
+    <tr>
+        <th>参数名</th>
+        <th>参数值</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="entry : ${params}">
+        <td th:text="${entry.key}"></td>
+        <td th:text="${entry.value}"></td>
+    </tr>
+    </tbody>
+</table>
+<p th:unless="${not #maps.isEmpty(params)}">没有传递任何动态参数。</p>
+</body>
+</html>
