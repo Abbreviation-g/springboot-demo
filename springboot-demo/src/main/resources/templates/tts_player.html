@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Qwen3 TTS 流式播放</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #0f1117;
+      color: #e2e8f0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .card {
+      background: #1a1d27;
+      border: 1px solid #2d3148;
+      border-radius: 16px;
+      padding: 32px;
+      width: 100%;
+      max-width: 640px;
+      box-shadow: 0 24px 64px rgba(0,0,0,.5);
+    }
+
+    h1 {
+      font-size: 1.4rem;
+      font-weight: 700;
+      margin-bottom: 24px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    h1 span.badge {
+      font-size: .65rem;
+      font-weight: 600;
+      background: #7c6ff7;
+      color: #fff;
+      padding: 2px 8px;
+      border-radius: 99px;
+      letter-spacing: .04em;
+    }
+
+    label {
+      display: block;
+      font-size: .8rem;
+      font-weight: 600;
+      color: #94a3b8;
+      margin-bottom: 6px;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+    }
+
+    textarea, input[type="text"], select {
+      width: 100%;
+      background: #0f1117;
+      border: 1px solid #2d3148;
+      border-radius: 8px;
+      color: #e2e8f0;
+      font-size: .95rem;
+      padding: 10px 12px;
+      outline: none;
+      transition: border-color .2s;
+      font-family: inherit;
+    }
+    textarea:focus, input[type="text"]:focus, select:focus {
+      border-color: #7c6ff7;
+    }
+    textarea { resize: vertical; min-height: 100px; line-height: 1.6; }
+    select option { background: #1a1d27; }
+
+    .row { margin-bottom: 18px; }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 11px 22px;
+      border-radius: 8px;
+      border: none;
+      font-size: .95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity .2s, transform .1s;
+      user-select: none;
+    }
+    .btn:active { transform: scale(.97); }
+    .btn:disabled { opacity: .45; cursor: not-allowed; transform: none; }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #7c6ff7 0%, #5b5bd6 100%);
+      color: #fff;
+    }
+    .btn-danger {
+      background: #3d1f1f;
+      color: #f87171;
+      border: 1px solid #5a2323;
+    }
+
+    .controls {
+      display: flex;
+      gap: 10px;
+      margin-top: 4px;
+    }
+
+    /* 进度波形可视化 */
+    #visualizer {
+      width: 100%;
+      height: 56px;
+      border-radius: 8px;
+      background: #0f1117;
+      border: 1px solid #2d3148;
+      margin-top: 18px;
+      display: block;
+    }
+
+    /* 状态栏 */
+    #status {
+      margin-top: 14px;
+      font-size: .82rem;
+      color: #64748b;
+      min-height: 1.4em;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    #status.active   { color: #7c6ff7; }
+    #status.playing  { color: #34d399; }
+    #status.done     { color: #94a3b8; }
+    #status.error    { color: #f87171; }
+
+    .dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: currentColor;
+      flex-shrink: 0;
+    }
+    .dot.pulse {
+      animation: pulse 1.2s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50%       { opacity: .4; transform: scale(.7); }
+    }
+
+    /* 统计信息 */
+    #stats {
+      margin-top: 14px;
+      display: none;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+    #stats.show { display: grid; }
+    .stat-box {
+      background: #0f1117;
+      border: 1px solid #2d3148;
+      border-radius: 8px;
+      padding: 10px 12px;
+      text-align: center;
+    }
+    .stat-box .val {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #7c6ff7;
+    }
+    .stat-box .key {
+      font-size: .72rem;
+      color: #64748b;
+      margin-top: 2px;
+    }
+
+    #debugPanel {
+      margin-top: 14px;
+      border: 1px solid #2d3148;
+      border-radius: 8px;
+      background: #0f1117;
+      overflow: hidden;
+    }
+    #debugPanel summary {
+      cursor: pointer;
+      list-style: none;
+      padding: 10px 12px;
+      font-size: .82rem;
+      color: #94a3b8;
+      user-select: none;
+    }
+    #debugPanel summary::-webkit-details-marker {
+      display: none;
+    }
+    #debugLog {
+      border-top: 1px solid #2d3148;
+      padding: 10px 12px;
+      max-height: 220px;
+      overflow: auto;
+      white-space: pre-wrap;
+      font-size: .74rem;
+      line-height: 1.5;
+      color: #cbd5e1;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+
+    .divider {
+      border: none;
+      border-top: 1px solid #2d3148;
+      margin: 22px 0;
+    }
+  </style>
+</head>
+<body>
+<div class="card">
+  <h1>🎙 Qwen3 TTS <span class="badge">STREAM</span></h1>
+
+  <div class="row">
+    <label>服务地址</label>
+    <input type="text" id="baseUrl" value="http://172.16.30.26:8601" />
+  </div>
+
+  <div class="row">
+    <label>合成文本</label>
+    <textarea id="inputText">荷塘月色。这几天心里颇不宁静。今晚在院子里坐着乘凉，忽然想起日日走过的荷塘，在这满月的光里，总该另有一番样子吧。月亮渐渐地升高了，墙外马路上孩子们的欢笑，已经听不见了；妻在屋里拍着闰儿⑴，迷迷糊糊地哼着眠歌。我悄悄地披了大衫，带上门出去。沿着荷塘，是一条曲折的小煤屑路。这是一条幽僻的路；白天也少人走，夜晚更加寂寞。荷塘四面，长着许多树，蓊蓊郁郁⑵的。路的一旁，是些杨柳，和一些不知道名字的树。没有月光的晚上，这路上阴森森的，有些怕人。今晚却很好，虽然月光也还是淡淡的。</textarea>
+  </div>
+
+  <div class="grid-2 row">
+    <div>
+      <label>音色 (Voice)</label>
+      <select id="voice">
+        <option value="vivian">vivian</option>
+        <option value="ryan">ryan</option>
+        <option value="aiden">aiden</option>
+        <option value="serena">serena</option>
+      </select>
+    </div>
+    <div>
+      <label>语言 (Language)</label>
+      <select id="language">
+        <option value="Auto">Auto</option>
+        <option value="Chinese" selected>Chinese</option>
+        <option value="English">English</option>
+        <option value="Japanese">Japanese</option>
+        <option value="Korean">Korean</option>
+        <option value="German">German</option>
+        <option value="French">French</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="row">
+    <label>情感指令 (Instructions) <span style="color:#4a5568;font-weight:400">可选</span></label>
+    <input type="text" id="instructions" placeholder="例如：用温柔自然的语气说" />
+  </div>
+
+  <div class="controls">
+    <button class="btn btn-primary" id="btnPlay" onclick="startStream()">▶ 开始合成 &amp; 播放</button>
+    <button class="btn btn-danger"  id="btnStop" onclick="stopStream()" disabled>■ 停止</button>
+  </div>
+
+  <canvas id="visualizer"></canvas>
+
+  <div id="status">
+    <span class="dot"></span>
+    <span id="statusText">就绪</span>
+  </div>
+
+  <div id="stats">
+    <div class="stat-box"><div class="val" id="statFirst">—</div><div class="key">首包延迟</div></div>
+    <div class="stat-box"><div class="val" id="statBytes">—</div><div class="key">接收数据</div></div>
+    <div class="stat-box"><div class="val" id="statDur">—</div><div class="key">音频时长</div></div>
+  </div>
+
+  <details id="debugPanel" open>
+    <summary>调试日志</summary>
+    <div id="debugLog">等待播放...</div>
+  </details>
+</div>
+
+<script>
+// ─── 常量 ────────────────────────────────────────────────────────────────────
+const SAMPLE_RATE        = 24000;   // Hz
+const BYTES_SAMPLE       = 2;       // int16 LE
+const LOOKAHEAD          = 1.2;     // 向前调度 1.2s，吸收模型推理抖动
+const START_BUFFER_SEC   = 0.9;     // 至少积累约 900ms 音频后再开始播
+const RESUME_BUFFER_SEC  = 0.6;     // 发生 underrun 后，恢复播放前至少再攒 600ms
+const SCHEDULER_INTERVAL = 20;      // 调度器触发间隔 ms
+const CHUNK_SAMPLES      = 2048;    // 每个 AudioBufferSourceNode 约 85ms，减小等待整块凑齐的延迟
+const DEBUG_LOG_LIMIT    = 120;
+const SEAM_ALERT_DELTA   = 0.35;
+const LOW_BUFFER_WARN_SEC = 0.35;
+
+// ─── 全局状态 ────────────────────────────────────────────────────────────────
+let audioCtx      = null;
+let abortCtrl     = null;
+let nextStartTime = 0;
+let totalSamples  = 0;
+let totalBytes    = 0;
+let startTs       = 0;
+let firstChunkTs  = 0;
+let pendingBuf    = new Uint8Array(0);  // 字节未满一个 chunk 时的暂存
+let queuedSamples = 0;
+let playbackStarted = false;
+let lastUnderrunAt = 0;
+let chunkCounter   = 0;
+let underrunCount  = 0;
+let lastChunkAt    = 0;
+let lastChunkTailSample = null;
+let debugLines     = [];
+let lastLowBufferLogAt = 0;
+
+// PCM 队列：Float32Array 数组，由调度器消费
+let pcmQueue      = [];
+let schedulerTimer = null;
+let streamDone    = false;
+
+// 可视化
+let vizAnimId  = null;
+let vizAnalyser = null;
+let vizData    = null;
+
+// ─── UI 辅助 ─────────────────────────────────────────────────────────────────
+function setStatus(text, cls) {
+  const el = document.getElementById('status');
+  const dot = el.querySelector('.dot');
+  const txt = document.getElementById('statusText');
+  el.className = cls || '';
+  dot.className = 'dot' + (cls === 'active' ? ' pulse' : '');
+  txt.textContent = text;
+}
+
+function setBtns(playing) {
+  document.getElementById('btnPlay').disabled = playing;
+  document.getElementById('btnStop').disabled = !playing;
+}
+
+function fmtBytes(b) {
+  if (b < 1024) return b + ' B';
+  if (b < 1048576) return (b/1024).toFixed(1) + ' KB';
+  return (b/1048576).toFixed(2) + ' MB';
+}
+
+function debugLog(message, data) {
+  const stamp = new Date().toLocaleTimeString('zh-CN', { hour12: false });
+  const line = data ? `[${stamp}] ${message} ${JSON.stringify(data)}` : `[${stamp}] ${message}`;
+  debugLines.push(line);
+  if (debugLines.length > DEBUG_LOG_LIMIT) debugLines.shift();
+  const el = document.getElementById('debugLog');
+  el.textContent = debugLines.join('\n');
+  el.scrollTop = el.scrollHeight;
+  if (data) {
+    console.log('[tts-debug]', message, data);
+  } else {
+    console.log('[tts-debug]', message);
+  }
+}
+
+function resetDebugLog() {
+  debugLines = [];
+  document.getElementById('debugLog').textContent = '等待播放...';
+}
+
+// ─── 可视化 ──────────────────────────────────────────────────────────────────
+function startVisualizer(analyser) {
+  const canvas = document.getElementById('visualizer');
+  const ctx2d  = canvas.getContext('2d');
+  analyser.fftSize = 256;
+  const bufLen = analyser.frequencyBinCount;
+  vizData = new Uint8Array(bufLen);
+
+  function draw() {
+    vizAnimId = requestAnimationFrame(draw);
+    analyser.getByteFrequencyData(vizData);
+
+    const W = canvas.width  = canvas.offsetWidth;
+    const H = canvas.height = canvas.offsetHeight;
+    ctx2d.clearRect(0, 0, W, H);
+
+    const barW = (W / bufLen) * 2.4;
+    let x = 0;
+    for (let i = 0; i < bufLen; i++) {
+      const barH = (vizData[i] / 255) * H * 0.9;
+      const hue  = 240 + (vizData[i] / 255) * 60;
+      ctx2d.fillStyle = `hsla(${hue}, 80%, 65%, .85)`;
+      ctx2d.fillRect(x, H - barH, barW - 1, barH);
+      x += barW;
+    }
+  }
+  draw();
+}
+
+function stopVisualizer() {
+  if (vizAnimId) { cancelAnimationFrame(vizAnimId); vizAnimId = null; }
+  const canvas = document.getElementById('visualizer');
+  const ctx2d  = canvas.getContext('2d');
+  const W = canvas.width  = canvas.offsetWidth;
+  const H = canvas.height = canvas.offsetHeight;
+  ctx2d.clearRect(0, 0, W, H);
+}
+
+function queueDurationSec() {
+  return queuedSamples / SAMPLE_RATE;
+}
+
+function scheduledAheadSec() {
+  if (!audioCtx) return 0;
+  return Math.max(0, nextStartTime - audioCtx.currentTime);
+}
+
+function totalBufferedSec() {
+  return queueDurationSec() + scheduledAheadSec();
+}
+
+// ─── 将 int16 LE 字节推入 pcmQueue（按 CHUNK_SAMPLES 分块）────────────────────
+function pushPCMBytes(newBytes) {
+  const merged = new Uint8Array(pendingBuf.length + newBytes.length);
+  merged.set(pendingBuf);
+  merged.set(newBytes, pendingBuf.length);
+
+  const chunkBytes = CHUNK_SAMPLES * BYTES_SAMPLE;
+  let offset = 0;
+
+  while (offset + chunkBytes <= merged.length) {
+    const int16 = new Int16Array(merged.buffer, merged.byteOffset + offset, CHUNK_SAMPLES);
+    const f32   = new Float32Array(CHUNK_SAMPLES);
+    for (let i = 0; i < CHUNK_SAMPLES; i++) f32[i] = int16[i] / 32768.0;
+    const head = f32[0];
+    const tail = f32[f32.length - 1];
+    const seamDelta = lastChunkTailSample === null ? 0 : Math.abs(head - lastChunkTailSample);
+    if (lastChunkTailSample !== null && seamDelta >= SEAM_ALERT_DELTA) {
+      debugLog('检测到较大 chunk 接缝振幅跳变', {
+        chunk: chunkCounter + 1,
+        seamDelta: Number(seamDelta.toFixed(4)),
+        prevTail: Number(lastChunkTailSample.toFixed(4)),
+        currHead: Number(head.toFixed(4)),
+      });
+    }
+    lastChunkTailSample = tail;
+    pcmQueue.push(f32);
+    queuedSamples += f32.length;
+    chunkCounter += 1;
+    debugLog('PCM 入队', {
+      chunk: chunkCounter,
+      samples: f32.length,
+      queueSec: Number(queueDurationSec().toFixed(3)),
+      scheduledSec: Number(scheduledAheadSec().toFixed(3)),
+      totalBufferedSec: Number(totalBufferedSec().toFixed(3)),
+      first: Number(head.toFixed(4)),
+      last: Number(tail.toFixed(4)),
+    });
+    offset += chunkBytes;
+  }
+
+  // 字节未满一个 chunk，暂存
+  pendingBuf = merged.slice(offset);
+}
+
+// ─── 刷新末尾不足一个 chunk 的剩余采样 ──────────────────────────────────────
+function flushRemaining() {
+  if (pendingBuf.length < BYTES_SAMPLE) return;
+  const aligned = pendingBuf.length - (pendingBuf.length % BYTES_SAMPLE);
+  const numSamples = aligned / BYTES_SAMPLE;
+  const int16 = new Int16Array(pendingBuf.buffer, pendingBuf.byteOffset, numSamples);
+  const f32   = new Float32Array(numSamples);
+  for (let i = 0; i < numSamples; i++) f32[i] = int16[i] / 32768.0;
+  pcmQueue.push(f32);
+  queuedSamples += f32.length;
+  chunkCounter += 1;
+  debugLog('尾包入队', {
+    chunk: chunkCounter,
+    samples: f32.length,
+    queueSec: Number(queueDurationSec().toFixed(3)),
+    scheduledSec: Number(scheduledAheadSec().toFixed(3)),
+    totalBufferedSec: Number(totalBufferedSec().toFixed(3)),
+  });
+  pendingBuf = new Uint8Array(0);
+}
+
+// ─── 定时调度器：每 SCHEDULER_INTERVAL ms 向 AudioContext 时间轴填充至 LOOKAHEAD 秒 ──
+function scheduleSource(f32) {
+  const buf = audioCtx.createBuffer(1, f32.length, SAMPLE_RATE);
+  buf.copyToChannel(f32, 0);
+  const src = audioCtx.createBufferSource();
+  src.buffer = buf;
+  if (vizAnalyser) {
+    src.connect(vizAnalyser);
+  } else {
+    src.connect(audioCtx.destination);
+  }
+  // 若时间线已落后（队列一度耗尽），从当前时刻续上，避免累积越来越大的偏移
+  if (nextStartTime < audioCtx.currentTime) {
+    debugLog('调度时间线已落后', {
+      lateMs: Number(((audioCtx.currentTime - nextStartTime) * 1000).toFixed(1)),
+      queueSec: Number(queueDurationSec().toFixed(3)),
+      scheduledSec: Number(scheduledAheadSec().toFixed(3)),
+      totalBufferedSec: Number(totalBufferedSec().toFixed(3)),
+    });
+    nextStartTime = audioCtx.currentTime + 0.01;
+  }
+  src.start(nextStartTime);
+  nextStartTime += buf.duration;
+  totalSamples  += f32.length;
+  queuedSamples -= f32.length;
+  document.getElementById('statDur').textContent =
+    (totalSamples / SAMPLE_RATE).toFixed(1) + 's';
+}
+
+function runScheduler() {
+  if (!audioCtx) return;
+  if (!playbackStarted) {
+    if (queueDurationSec() < START_BUFFER_SEC && !streamDone) return;
+    playbackStarted = true;
+    nextStartTime = Math.max(nextStartTime, audioCtx.currentTime + 0.02);
+    debugLog('开始调度播放', {
+      queueSec: Number(queueDurationSec().toFixed(3)),
+      scheduledSec: Number(scheduledAheadSec().toFixed(3)),
+      totalBufferedSec: Number(totalBufferedSec().toFixed(3)),
+      underruns: underrunCount,
+    });
+    setStatus('正在播放...', 'playing');
+  }
+
+  const scheduleUntil = audioCtx.currentTime + LOOKAHEAD;
+  while (nextStartTime < scheduleUntil && pcmQueue.length > 0) {
+    scheduleSource(pcmQueue.shift());
+  }
+
+  if (playbackStarted && totalBufferedSec() < LOW_BUFFER_WARN_SEC) {
+    const now = performance.now();
+    if (now - lastLowBufferLogAt > 250) {
+      lastLowBufferLogAt = now;
+      debugLog('缓冲即将见底', {
+        queueSec: Number(queueDurationSec().toFixed(3)),
+        scheduledSec: Number(scheduledAheadSec().toFixed(3)),
+        totalBufferedSec: Number(totalBufferedSec().toFixed(3)),
+      });
+    }
+  }
+
+  if (!streamDone && pcmQueue.length === 0 && nextStartTime <= audioCtx.currentTime + 0.02) {
+    playbackStarted = false;
+    lastUnderrunAt = performance.now();
+    underrunCount += 1;
+    debugLog('发生 underrun，等待重新缓冲', {
+      underruns: underrunCount,
+      playedSec: Number((totalSamples / SAMPLE_RATE).toFixed(3)),
+      queueSec: Number(queueDurationSec().toFixed(3)),
+      scheduledSec: Number(scheduledAheadSec().toFixed(3)),
+      totalBufferedSec: Number(totalBufferedSec().toFixed(3)),
+    });
+    setStatus('缓冲中...', 'active');
+  }
+}
+
+function startScheduler() {
+  if (schedulerTimer) return;
+  schedulerTimer = setInterval(runScheduler, SCHEDULER_INTERVAL);
+}
+
+function stopScheduler() {
+  if (schedulerTimer) { clearInterval(schedulerTimer); schedulerTimer = null; }
+}
+
+// ─── 主流程 ──────────────────────────────────────────────────────────────────
+async function startStream() {
+  const text = document.getElementById('inputText').value.trim();
+  if (!text) { alert('请输入合成文本'); return; }
+
+  // 初始化 / 恢复 AudioContext
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)(
+      { sampleRate: SAMPLE_RATE }
+    );
+    vizAnalyser = audioCtx.createAnalyser();
+    vizAnalyser.connect(audioCtx.destination);
+  }
+  if (audioCtx.state === 'suspended') await audioCtx.resume();
+
+  // 重置状态
+  abortCtrl     = new AbortController();
+  nextStartTime = audioCtx.currentTime + 0.05;
+  totalSamples  = 0;
+  totalBytes    = 0;
+  pendingBuf    = new Uint8Array(0);
+  pcmQueue      = [];
+  queuedSamples = 0;
+  streamDone    = false;
+  playbackStarted = false;
+  lastUnderrunAt = 0;
+  chunkCounter   = 0;
+  underrunCount  = 0;
+  lastChunkAt    = 0;
+  lastChunkTailSample = null;
+  lastLowBufferLogAt = 0;
+  startTs       = performance.now();
+  firstChunkTs  = 0;
+
+  setBtns(true);
+  setStatus('正在连接...', 'active');
+  document.getElementById('stats').classList.remove('show');
+  resetDebugLog();
+  startVisualizer(vizAnalyser);
+
+  const baseUrl      = document.getElementById('baseUrl').value.trim().replace(/\/$/, '');
+  const voice        = document.getElementById('voice').value;
+  const language     = document.getElementById('language').value;
+  const instructions = document.getElementById('instructions').value.trim();
+
+  debugLog('开始新请求', {
+    voice,
+    language,
+    textLength: text.length,
+  });
+
+  const body = {
+    input: text,
+    voice,
+    language,
+    response_format: 'pcm',
+    stream: true,
+  };
+  if (instructions) body.instructions = instructions;
+
+  try {
+    let url = "http://127.0.0.1:29188/ytj/inference/tts/stream"
+    // let url = `${baseUrl}/v1/audio/speech`
+    const resp = await fetch(url, {
+      method:  'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'xtoken': 'df258510-bb77-400d-b4a8-a22acb13731f',
+        'appId': '535571678175365'
+      },
+      body:    JSON.stringify(body),
+      signal:  abortCtrl.signal,
+    });
+
+    if (!resp.ok) {
+      const errText = await resp.text();
+      throw new Error(`HTTP ${resp.status}: ${errText}`);
+    }
+
+    setStatus('接收 PCM 流...', 'active');
+
+    const reader = resp.body.getReader();
+    startScheduler();
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      // 记录首包延迟
+      if (!firstChunkTs) {
+        firstChunkTs = performance.now();
+        document.getElementById('statFirst').textContent =
+          (firstChunkTs - startTs).toFixed(0) + ' ms';
+        document.getElementById('stats').classList.add('show');
+        setStatus('缓冲中...', 'active');
+        debugLog('收到首包 PCM', {
+          firstPacketMs: Number((firstChunkTs - startTs).toFixed(1)),
+          bytes: value.byteLength,
+          totalBufferedSec: Number(totalBufferedSec().toFixed(3)),
+        });
+      }
+
+      const now = performance.now();
+      const chunkGapMs = lastChunkAt ? now - lastChunkAt : 0;
+      lastChunkAt = now;
+      totalBytes += value.byteLength;
+      document.getElementById('statBytes').textContent = fmtBytes(totalBytes);
+      debugLog('网络 chunk 到达', {
+        bytes: value.byteLength,
+        gapMs: Number(chunkGapMs.toFixed(1)),
+        totalBytes,
+        queueSec: Number(queueDurationSec().toFixed(3)),
+        scheduledSec: Number(scheduledAheadSec().toFixed(3)),
+        totalBufferedSec: Number(totalBufferedSec().toFixed(3)),
+      });
+
+      // 解码并分块推入队列，由调度器统一消费
+      pushPCMBytes(value);
+      if (!playbackStarted) {
+        const minBuffer = lastUnderrunAt ? RESUME_BUFFER_SEC : START_BUFFER_SEC;
+        setStatus(`缓冲中... ${totalBufferedSec().toFixed(2)}s`, 'active');
+        if (queueDurationSec() >= minBuffer) {
+          runScheduler();
+        }
+      }
+    }
+
+    // 尾部剩余帧
+    flushRemaining();
+    streamDone = true;
+    debugLog('服务端流结束', {
+      totalBytes,
+      queuedSec: Number(queueDurationSec().toFixed(3)),
+      scheduledSec: Number(scheduledAheadSec().toFixed(3)),
+      totalBufferedSec: Number(totalBufferedSec().toFixed(3)),
+      underruns: underrunCount,
+    });
+
+    // 等待调度器将队列全部送出，再等音频播完
+    while (pcmQueue.length > 0) {
+      await new Promise(r => setTimeout(r, SCHEDULER_INTERVAL));
+      runScheduler();
+    }
+    const remaining = (nextStartTime - audioCtx.currentTime) * 1000;
+    if (remaining > 0) await new Promise(r => setTimeout(r, remaining + 100));
+
+    setStatus(`播放完毕 · 共 ${fmtBytes(totalBytes)}`, 'done');
+    debugLog('播放结束', {
+      totalBytes,
+      totalSec: Number((totalSamples / SAMPLE_RATE).toFixed(3)),
+      scheduledSec: Number(scheduledAheadSec().toFixed(3)),
+      underruns: underrunCount,
+    });
+
+  } catch (err) {
+    if (err.name === 'AbortError') {
+      setStatus('已停止', 'done');
+      debugLog('播放被用户停止');
+    } else {
+      setStatus('错误：' + err.message, 'error');
+      debugLog('播放报错', { message: err.message });
+      console.error(err);
+    }
+  } finally {
+    stopScheduler();
+    stopVisualizer();
+    setBtns(false);
+    abortCtrl = null;
+  }
+}
+
+function stopStream() {
+  if (abortCtrl) abortCtrl.abort();
+  stopScheduler();
+  pcmQueue = [];
+  queuedSamples = 0;
+  if (audioCtx) {
+    audioCtx.close();
+    audioCtx    = null;
+    vizAnalyser = null;
+  }
+  stopVisualizer();
+  setBtns(false);
+  setStatus('已停止', 'done');
+  debugLog('stopStream 调用完成');
+}
+</script>
+</body>
+</html>
