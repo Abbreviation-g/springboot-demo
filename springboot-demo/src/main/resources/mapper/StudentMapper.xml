@@ -37,4 +37,24 @@
 		SELECT * FROM `t_student`
 		AS t1 WHERE t1.`c_class_id` = #{classId}
 	</select>
+
+	<update id="update" parameterType="com.my.springboot.demo.entity.Student">
+		UPDATE `t_student`
+		<set>
+			<if test="classId != null">
+				`c_class_id` = #{classId},
+			</if>
+			<if test="name != null">
+				`c_name` = #{name},
+			</if>
+		</set>
+		WHERE `id` = #{id}
+	</update>
+
+	<insert id="insert" parameterType="com.my.springboot.demo.entity.Student">
+		INSERT INTO `t_student`
+		(`c_class_id`, `c_name`)
+		VALUES
+		(#{classId}, #{name})
+	</insert>
 </mapper>

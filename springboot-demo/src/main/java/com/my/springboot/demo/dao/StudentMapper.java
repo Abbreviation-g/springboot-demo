@@ -15,4 +15,8 @@ public interface StudentMapper {
 	Student selectStudent(@Param("id") Long id);
 
 	StudentExtra selectStudentExtra(@Param("id") Long id);
+
+	int update(Student student);
+
+	int insert(Student student);
 }
