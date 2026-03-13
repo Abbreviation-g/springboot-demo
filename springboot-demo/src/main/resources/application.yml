@@ -1,6 +1,9 @@
 server:
    port: 8763
 spring:
+   jackson:
+      deserialization:
+        fail-on-unknown-properties: false # Jackson，在将 JSON 或其他格式的数据映射到 Java 对象时，如果发现对象中没有对应的属性，不要抛出异常，而是直接忽略它。
    data:
      redis:
         host: 127.0.0.1
