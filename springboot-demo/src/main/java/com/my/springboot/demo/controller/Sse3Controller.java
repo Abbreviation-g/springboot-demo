@@ -1,7 +1,7 @@
 package com.my.springboot.demo.controller;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Controller;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -9,7 +9,6 @@ import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseBodyEmitter;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
-import java.io.IOException;
 import java.util.Base64;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
@@ -33,7 +32,7 @@ public class Sse3Controller {
                         .bodyToFlux(byte[].class)
                         .subscribe(bytes -> {
                                     try {
-                                        emitter.send(bytes);
+                                        emitter.send(bytes, MediaType.APPLICATION_OCTET_STREAM);
                                     } catch (Exception e) {
                                         log.error("", e);
                                         emitter.completeWithError(e);
@@ -61,7 +60,7 @@ public class Sse3Controller {
                         .subscribe(bytes -> {
                                     log.info("length={}", bytes.length);
                                     try {
-                                        emitter.send(bytes);
+                                        emitter.send(bytes, MediaType.APPLICATION_OCTET_STREAM);
                                     } catch (Exception e) {
                                         log.error("", e);
                                         emitter.completeWithError(e);
