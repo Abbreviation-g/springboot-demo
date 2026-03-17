@@ -2,21 +2,27 @@ package com.my.springboot.demo.config;
 
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.BeansException;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.context.properties.source.ConfigurationPropertyName;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.PropertySource;
 import org.springframework.stereotype.Component;
 
 @Slf4j
 @Component
-public class PrintAllConfigs implements CommandLineRunner {
+public class PrintAllConfigs implements CommandLineRunner, ApplicationContextAware {
 
     @Resource
     private ConfigurableEnvironment environment;
+    private ApplicationContext applicationContext;
 
     @Override
     public void run(String... args) {
+        PrintAllConfigs bean = applicationContext.getBean(PrintAllConfigs.class);
+        log.info("--- PrintAllConfigs Bean: {} ---", bean);
         log.info("--- All Environment Properties ---");
         for (PropertySource<?> propertySource : environment.getPropertySources()) {
             String propertySourceName = propertySource.getName();
@@ -42,5 +48,10 @@ public class PrintAllConfigs implements CommandLineRunner {
                 }
             }
         }
+    }
+
+    @Override
+    public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
+        this.applicationContext = applicationContext;
     }
 }
