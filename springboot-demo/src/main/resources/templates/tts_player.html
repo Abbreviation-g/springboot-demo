@@ -224,7 +224,7 @@
 
   <div class="row">
     <label>服务地址</label>
-    <input type="text" id="baseUrl" value="http://172.16.30.26:8601" />
+    <input type="text" id="baseUrl" value="http://127.0.0.1:29188/ytj/inference/tts/stream" />
   </div>
 
   <div class="row">
@@ -630,9 +630,7 @@ async function startStream() {
   if (instructions) body.instructions = instructions;
 
   try {
-    let url = "http://127.0.0.1:29188/ytj/inference/tts/stream"
-    // let url = `${baseUrl}/v1/audio/speech`
-    const resp = await fetch(url, {
+    const resp = await fetch(baseUrl, {
       method:  'POST',
       headers: {
         'Content-Type': 'application/json',
