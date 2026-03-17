@@ -50,3 +50,16 @@ sa-token:
    # 是否输出操作日志
    is-log: true
    jwt-secret-key: password
+custom:
+   data:
+      -
+         name: springboot-name
+         value: springboot-value
+      -
+         name: springboot-name2
+         value: springboot-value2
+      -
+         name: springboot-name3
+         value: springboot-value3
+   name: springboot-demo
+   value: 1.0.0
