@@ -15,6 +15,18 @@
         <result column="deleted" jdbcType="TIMESTAMP" property="deleted"/>
         <result column="deletedByUser" jdbcType="TIMESTAMP" property="deleted_by_user"/>
     </resultMap>
+    <resultMap id="sessionResultMap" type="com.my.springboot.demo.entity.QaSession">
+        <id column="session_id" jdbcType="VARCHAR" property="sessionId"/>
+        <result column="user_id" jdbcType="VARCHAR" property="userId"/>
+
+        <result column="initial_request_time" jdbcType="TIMESTAMP" property="initialRequestTime"/>
+        <result column="initial_question" jdbcType="VARCHAR" property="initialQuestion"/>
+        <result column="initial_answer" jdbcType="VARCHAR" property="initialAnswer"/>
+
+        <result column="latest_request_time" jdbcType="TIMESTAMP" property="latestRequestTime"/>
+        <result column="latest_question" jdbcType="VARCHAR" property="latestQuestion"/>
+        <result column="latest_answer" jdbcType="VARCHAR" property="latestAnswer"/>
+    </resultMap>
 
     <select id="selectByRequestId" resultMap="baseResultMap">
         SELECT *
@@ -44,5 +56,22 @@
         WHERE session_id = #{sessionId}
         ORDER BY request_time ASC
             LIMIT #{offset}, #{limit}
+    </select>
+
+    <select id="querySession" resultMap="sessionResultMap">
+        SELECT session_id,
+               ANY_VALUE(user_id) as user_id,
+               min(request_time) as initial_request_time,
+--         argMin(question, request_time) as initial_question,
+               substring_index(group_concat(question order by request_time SEPARATOR '\0'), '\0', 1) as initial_question,
+               substring_index(group_concat(answer order by request_time SEPARATOR '\0'), '\0', 1) as initial_answer,
+
+               max(request_time) as latest_request_time,
+--         argMax(answer, request_time) as latest_answer
+               substring_index(group_concat(question order by request_time desc SEPARATOR '\0'), '\0', 1) as latest_question,
+               substring_index(group_concat(answer order by request_time desc SEPARATOR '\0'), '\0', 1) as latest_answer
+        FROM qa_log_detail
+        GROUP BY session_id
+        ORDER BY initial_request_time desc;
     </select>
 </mapper>

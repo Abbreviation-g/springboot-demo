@@ -1,5 +1,6 @@
 package com.my.springboot.demo.dao;
 
+import com.my.springboot.demo.entity.QaSession;
 import com.my.springboot.demo.entity.QuestionAnswerLogDetail;
 import org.apache.ibatis.annotations.Mapper;
 
@@ -14,4 +15,6 @@ public interface QaLogDetailMapper {
     int total(String sessionId);
 
     List<QuestionAnswerLogDetail> queryByPage(String sessionId, Integer offset, Integer limit);
+
+    List<QaSession> querySession();
 }
