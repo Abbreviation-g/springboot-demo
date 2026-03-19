@@ -1,6 +1,7 @@
 package com.my.springboot.demo.controller;
 
 import com.alibaba.fastjson.JSONObject;
+import com.my.springboot.demo.aop.OperationLogAnnotation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
@@ -16,6 +17,7 @@ import java.nio.charset.StandardCharsets;
 @Controller
 public class FormDataController {
 
+    @OperationLogAnnotation(operationModel = "文件上传", operationType = "上传", operationDesc = "接收一个文件字节数组和两个字符串参数")
     @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @ResponseBody
     public JSONObject handleUpload(
