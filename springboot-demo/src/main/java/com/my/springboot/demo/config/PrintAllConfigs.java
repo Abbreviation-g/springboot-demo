@@ -38,14 +38,12 @@ public class PrintAllConfigs implements CommandLineRunner, ApplicationContextAwa
 
     private void printIterable(Iterable<?> iterable) {
         for (Object item : iterable) {
-            if (item instanceof Iterable<?>) {
-                printIterable((Iterable<?>) item);
+            if (item instanceof Iterable<?> nestedIterable) {
+                printIterable(nestedIterable);
+            } else if (item instanceof ConfigurationPropertyName configurationPropertyName) {
+                log.info("Property Name: {}, value: {}", configurationPropertyName, environment.getProperty(configurationPropertyName.toString()));
             } else {
-                if (item instanceof ConfigurationPropertyName configurationPropertyName) {
-                    log.info("Property Name: {}, value: {}", configurationPropertyName, environment.getProperty(configurationPropertyName.toString()));
-                } else {
-                    log.info("item:{}, class:{}", item, item.getClass());
-                }
+                log.info("item:{}, class:{}", item, item.getClass());
             }
         }
     }

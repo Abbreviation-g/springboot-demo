@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.my.springboot.demo.dao.ParentChildrenMapper">
+
+    <select id="selectRecursiveCurrentAndParentById">
+        with recursive t_parent_children_detail as
+        (
+            select id, p_id from t_parent_children where id = #{id}
+            union all
+            select a.id, a.p_id from t_parent_children as a join t_parent_children_detail as b on a.id = b.p_id
+        )
+        select id from t_parent_children_detail
+    </select>
+
+    <select id="selectRecursiveCurrentAndChildrenById">
+        with recursive t_parent_children_detail as
+        (
+            select id from t_parent_children where id = #{id}
+            union
+            select a.id from t_parent_children_detail as b join t_parent_children as a on a.p_id = b.id
+        )
+        select id from t_parent_children_detail
+    </select>
+</mapper>

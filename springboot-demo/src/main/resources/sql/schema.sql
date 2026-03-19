@@ -75,3 +75,12 @@ CREATE TABLE `qa_log_detail` (
      PRIMARY KEY (`request_id`),
      UNIQUE KEY `request_id` (`request_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='对话问答详情，保存chat接口的完整返回值';
+
+-- db_spring_demo.t_parent_children definition
+
+CREATE TABLE `t_parent_children` (
+                                     `id` int NOT NULL AUTO_INCREMENT,
+                                     `p_id` int NOT NULL,
+                                     `name` varchar(100) NOT NULL,
+                                     PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=10202 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
