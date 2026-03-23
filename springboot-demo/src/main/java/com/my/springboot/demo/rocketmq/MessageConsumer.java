@@ -7,10 +7,10 @@ import org.springframework.stereotype.Component;
 
 @Slf4j
 @Component
-@RocketMQMessageListener(topic = "springboot-demo-topic", consumerGroup = "springboot-demo-consumer")
+@RocketMQMessageListener(topic = "springboot-demo-topic-string", consumerGroup = "springboot-demo-consumer-string")
 public class MessageConsumer implements RocketMQListener<String> {
     @Override
     public void onMessage(String message) {
-        log.info("Received message: {}", message);
+        log.info("mqtt received string message: {}", message);
     }
 }

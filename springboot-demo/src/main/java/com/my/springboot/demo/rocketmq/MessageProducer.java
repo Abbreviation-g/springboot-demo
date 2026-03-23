@@ -12,4 +12,8 @@ public class MessageProducer {
     public void sendMessage(String topic, String message) {
         rocketMQTemplate.convertAndSend(topic, message);
     }
+
+    public void sendMessage(String topic, RocketMessage rocketMessage) {
+        rocketMQTemplate.convertAndSend(topic, rocketMessage);
+    }
 }
