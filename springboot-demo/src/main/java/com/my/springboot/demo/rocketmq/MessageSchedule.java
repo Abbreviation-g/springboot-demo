@@ -16,9 +16,9 @@ public class MessageSchedule {
     private MessageProducer messageProducer;
 
     /**
-     * 每1分钟执行一次
+     * 每天24点执行一次
      */
-    @Scheduled(cron = "0 0/1 * * * ?")
+    @Scheduled(cron = "0 0 0 * * ?")
     public void run() {
         log.info("mqtt定时任务开始执行... date:{}", new Date());
         messageProducer.sendMessage("springboot-demo-topic-string", "定时任务执行时间: " + new Date());

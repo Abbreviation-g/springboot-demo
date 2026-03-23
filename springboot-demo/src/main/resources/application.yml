@@ -26,6 +26,22 @@ spring:
       suffix: .html
       check-template-location: true
       template-resolver-order: 1
+   mail:
+      host: smtp.qq.com
+      username: 1962270215@qq.com
+      password: npuiajnodauybjeh
+      port: 465
+      protocol: smtp
+      default-encoding: UTF-8
+      properties:
+         mail:
+            smtp:
+               ssl:
+                  enable: true
+               socketFactory:
+                  port: 465
+                  class: javax.net.ssl.SSLSocketFactory
+         debug: true
 
 
 mybatis:
