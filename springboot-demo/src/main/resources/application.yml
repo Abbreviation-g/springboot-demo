@@ -63,3 +63,8 @@ custom:
          value: springboot-value3
    name: springboot-demo
    value: 1.0.0
+
+rocketmq:
+  name-server: 172.16.31.99:9876
+  producer:
+     group: springboot-demo-producer

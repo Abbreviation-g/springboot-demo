@@ -1,6 +1,6 @@
 package test;
 
-import com.my.springboot.demo.utils.SortableTreeResponseInterface;
+import com.my.springboot.demo.utils.SortableResponseInterface;
 import com.my.springboot.demo.utils.TreeResponseInterface;
 import lombok.Data;
 import org.junit.Test;
@@ -49,13 +49,13 @@ public class TreeResponseInterfaceTest {
         SortableTreeNode node6 = new SortableTreeNode("6", "3", "6");
         List<SortableTreeNode> nodes = new ArrayList<>(List.of(node1, node2, node3, node4, node5, node6));
         List<SortableTreeNode> ts1 = TreeResponseInterface.buildTree(nodes);
-        SortableTreeResponseInterface.sort(ts1);
+        SortableResponseInterface.sort(ts1);
         assert ts1.size() == 1;
     }
 
 
     @Data
-    private static class SortableTreeNode implements SortableTreeResponseInterface<SortableTreeNode, String> {
+    private static class SortableTreeNode implements SortableResponseInterface<SortableTreeNode, String, String> {
         private String id;
         private String parentId;
         private String name;
@@ -68,8 +68,13 @@ public class TreeResponseInterfaceTest {
         }
 
         @Override
-        public Integer getSort() {
-            return 0;
+        public String getSort() {
+            return id;
+        }
+
+        @Override
+        public int compareTo(SortableTreeNode o) {
+            return String.CASE_INSENSITIVE_ORDER.compare(this.getSort(), o.getSort());
         }
     }
 }
