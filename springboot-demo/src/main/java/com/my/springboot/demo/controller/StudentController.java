@@ -2,11 +2,14 @@ package com.my.springboot.demo.controller;
 
 import com.my.springboot.demo.dao.StudentMapper;
 import com.my.springboot.demo.entity.Student;
+import com.my.springboot.demo.eventlistener.MyEvent;
 import com.my.springboot.demo.request.StudentAddRequest;
 import com.my.springboot.demo.utils.Result;
 import jakarta.annotation.Resource;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.web.bind.annotation.*;
 
 @Slf4j
@@ -15,6 +18,8 @@ import org.springframework.web.bind.annotation.*;
 public class StudentController {
     @Resource
     private StudentMapper studentMapper;
+    @Autowired
+    private ApplicationEventPublisher eventPublisher;
     @PutMapping("/update")
     public String update() {
         log.info("update student");
@@ -29,6 +34,8 @@ public class StudentController {
         student.setClassId(request.getClassId());
         int result = studentMapper.insert(student);
         log.info("add student, result={}", result);
+
+        eventPublisher.publishEvent(new MyEvent(student));
 
         return Result.ok("add student success");
     }
