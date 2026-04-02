@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: nginx-sample
+  name: nginx-sample
+  namespace: namespace-0327
+spec:
+  replicas: 1 # 副本数量
+  revisionHistoryLimit: 10 # 进行滚动更新后，保留的历史版本数量
+  selector: # 用于找到匹配的replicaset
+    matchLabels: # 按照标签匹配
+      app: nginx-sample # 匹配到的标签
+  strategy: # 更新策略
+    rollingUpdate: # 滚动更新配置
+      maxSurge: 25% # 进行滚动更新时，同时启动最多25%的新实例
+      maxUnavailable: 25% # 进行滚动更新时，同时停止最多25%的旧实例
+    type: RollingUpdate # 更新类型，采用滚动更新
+  template: # pod模板
+    metadata: # pod元信息
+      labels: # pod的标签
+        app: nginx-sample
+    spec: # pod的期望信息
+      containers: # pod的容器
+        - image: nginx:1.9.1 # pod的镜像
+          imagePullPolicy: IfNotPresent # 拉取策略
+          name: nginx # 容器的名称
+      restartPolicy: Always # 重启策略
+      terminationGracePeriodSeconds: 30 # 删除操作最多宽限多少时间

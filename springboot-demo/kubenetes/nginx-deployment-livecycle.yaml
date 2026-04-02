@@ -1,0 +1,73 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  namespace: namespace-0327
+  labels:
+    app: nginx
+spec:
+  replicas: 1  # 指定希望运行的 Pod 副本数量
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      terminationGracePeriodSeconds: 40 # 当pod被删除时，给pod多长宽限时间
+      containers:
+        - name: nginx
+          image: nginx:latest # 使用最新的 nginx 镜像
+          imagePullPolicy: IfNotPresent
+          lifecycle:
+            postStart:
+              exec:
+                command:
+                  - sh
+                  - -c
+                  - 'echo "<h1>pre stop</h1>" > /usr/share/nginx/html/prestop.html'
+            preStop:
+              exec:
+                command:
+                  - sh
+                  - -c
+                  - "sleep 1; echo 'sleep finish' >> /usr/share/nginx/html/prestop.html"
+          command:
+            - nginx
+            - -g
+            - 'daemon off;'
+          workingDir: /usr/share/nginx/html
+          ports:
+            - name: http
+              containerPort: 80
+              protocol: TCP
+          env:
+            - name: JVM_OPS
+              value: '-Xms128m -Xmx128m'
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 200m
+              memory: 256Mi
+      restartPolicy: Always
+
+---
+# --- 分隔符，用于分隔多个资源定义
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-service
+  namespace: namespace-0327
+spec:
+  selector:
+    app: nginx
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+  type: NodePort # 与上面命令行方式一样，使用 NodePort 类型
+

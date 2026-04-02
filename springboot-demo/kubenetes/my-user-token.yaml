@@ -1,0 +1,10 @@
+# sa-token.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: my-user-token
+  namespace: default
+  annotations:
+    kubernetes.io/service-account.name: my-serviceaccount
+type: kubernetes.io/service-account-token
+

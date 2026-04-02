@@ -1,0 +1,4 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: namespace-0327  # 将这里替换为你想要的命名空间名称
