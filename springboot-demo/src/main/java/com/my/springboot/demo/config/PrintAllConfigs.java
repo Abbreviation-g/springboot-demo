@@ -21,19 +21,19 @@ public class PrintAllConfigs implements CommandLineRunner, ApplicationContextAwa
 
     @Override
     public void run(String... args) {
-        PrintAllConfigs bean = applicationContext.getBean(PrintAllConfigs.class);
-        log.info("--- PrintAllConfigs Bean: {} ---", bean);
-        log.info("--- All Environment Properties ---");
-        for (PropertySource<?> propertySource : environment.getPropertySources()) {
-            String propertySourceName = propertySource.getName();
-            Object source = propertySource.getSource();
-            if (source instanceof Iterable<?> iterablePropertySource) {
-                printIterable(iterablePropertySource);
-            } else {
-                log.info("Property Source: {}, source: {}", propertySourceName, source);
-            }
-        }
-        log.info("--- End of Properties ---\n");
+        // PrintAllConfigs bean = applicationContext.getBean(PrintAllConfigs.class);
+        // log.info("--- PrintAllConfigs Bean: {} ---", bean);
+        // log.info("--- All Environment Properties ---");
+        // for (PropertySource<?> propertySource : environment.getPropertySources()) {
+        //     String propertySourceName = propertySource.getName();
+        //     Object source = propertySource.getSource();
+        //     if (source instanceof Iterable<?> iterablePropertySource) {
+        //         printIterable(iterablePropertySource);
+        //     } else {
+        //         log.info("Property Source: {}, source: {}", propertySourceName, source);
+        //     }
+        // }
+        // log.info("--- End of Properties ---\n");
     }
 
     private void printIterable(Iterable<?> iterable) {
