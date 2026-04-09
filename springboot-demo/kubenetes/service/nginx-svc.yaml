@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-svc # service的名称
+  namespace: namespace-0327
+  labels:
+    app: nginx-svc # service本身的标签
+spec:
+  ports:
+    - port: 80 # service自己的端口， 在使用内网ip时使用
+      targetPort: 80 # 目标pod的端口，
+      name: web # 为端口起个名字
+  type: NodePort # 有四种类型， NodePort， ClusterIP， LoadBalancer， ExternalName
+  # NodePort:随机启动一个端口(30000~32767)，映射到pods中的端口，该端口是直接绑定到node上的，且每一个node都会绑定这个端口
+  # NodePort: 也可以实现将容器服务暴露到外部使用，但是这种方式在生产环境不推荐，效率很低，而且service是四层负载
+  selector: # 匹配到哪些pod会被该service代理
+    app: nginx-deploy # 所有匹配到该标签的pod都可以通过该service进行访问
+
