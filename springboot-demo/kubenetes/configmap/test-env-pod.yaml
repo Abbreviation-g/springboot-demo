@@ -1,0 +1,26 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: test-env-pod
+  namespace: namespace-0327
+spec:
+  containers:
+    - name: env-test
+      image: alpine
+      imagePullPolicy: IfNotPresent
+      restartPolicy: Never
+      command:
+        - /bin/sh
+        - -c
+        - 'env;sleep 3600'
+      env:
+        - name: JAVA_VM_OPSS
+          valueFrom:
+            configMapKeyRef: # 引用cm
+              name: test-env-config #cm的名字
+              key: JAVA_OPS_TEST # 表示从name这个configmao中获取key的对应的value并赋值给JAVA_VM_OPSS
+        - name: SPRING_NAME
+          valueFrom:
+            configMapKeyRef:
+              key: APP_NAME
+              name: test-env-config

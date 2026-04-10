@@ -1,0 +1,38 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: test-configfile-pod
+  namespace: namespace-0327
+spec:
+  restartPolicy: Never
+  containers:
+    - name: env-test
+      image: alpine
+      imagePullPolicy: IfNotPresent
+      restartPolicy: Never
+      command:
+        - /bin/sh
+        - -c
+        - 'env;sleep 3600'
+      env:
+        - name: JAVA_VM_OPSS
+          valueFrom:
+            configMapKeyRef: # 引用cm
+              name: test-env-config #cm的名字
+              key: JAVA_OPS_TEST # 表示从name这个configmao中获取key的对应的value并赋值给JAVA_VM_OPSS
+        - name: SPRING_NAME
+          valueFrom:
+            configMapKeyRef:
+              key: APP_NAME
+              name: test-env-config
+      volumeMounts: # 加载数据卷
+        - mountPath: '/usr/local/mysql/conf' # 将数据卷中的文件挂载到指定目录
+          name: db-config # 要加载volume中哪一个数据卷
+          readOnly: true # 是否只读
+  volumes: # 数据卷挂载 configMap或者 secret
+    - name: db-config # 数据卷的名字，可随意
+      configMap: # 数据卷类型为configMap
+        name: test-dir-config # 必须跟想要加载的configMap名字相同
+        items: # 将cm中的key进行映射，如果不指定，会将cm中所有的key全部转换为同名文件
+          - key: 'db.properties' # configMap中的key
+            path: 'db.properties' # 将该key的值转换为文件
