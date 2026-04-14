@@ -25,3 +25,8 @@ docker push harbor.streamcomputing.com/opensource/nginx:1.25
 
 
 kubectl apply -f private-image-pull-pod.yaml
+
+
+
+
+

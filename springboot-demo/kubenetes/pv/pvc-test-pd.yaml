@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: test-pvc-pd
+  namespace: namespace-0327
+spec:
+  # 节点亲和性
+  nodeName: worker001
+  containers:
+    - image: nginx
+      name: nginx-volume
+      volumeMounts:
+        - mountPath: /usr/share/nginx/html # 挂载到容器的哪个目录
+          name: test-volume # 挂载哪个 volume
+  volumes:
+    - name: test-volume
+      persistentVolumeClaim: # 关联pvc
+        claimName: nfs-pvc # pvc的名字
