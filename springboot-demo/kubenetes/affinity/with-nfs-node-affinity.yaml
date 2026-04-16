@@ -1,0 +1,31 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: with-nfs-node-affinity
+  namespace: namespace-0327
+spec:
+  nodeSelector:
+    "kubernetes.io/os": linux
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution: # 硬性亲和性
+        nodeSelectorTerms: # 匹配条件
+          - matchExpressions:
+              - key: nfs # master节点
+                values:
+                  - "yes"
+                operator: In
+      preferredDuringSchedulingIgnoredDuringExecution: # 软性亲和性
+        - weight: 1 # 权重，1-100，权重越高，优先级越高
+          preference:
+            matchExpressions:
+              - key: nfsserver
+                operator: In
+                values:
+                  - "yes"
+  containers:
+    - name: nginx
+      image: nginx
+
+#  节点必须包含一个键名为 topology.kubernetes.io/zone 的标签， 并且该标签的取值必须为 antarctica-east1 或 antarctica-west1。
+#  节点最好具有一个键名为 another-node-label-key 且取值为 another-node-label-value 的标签。

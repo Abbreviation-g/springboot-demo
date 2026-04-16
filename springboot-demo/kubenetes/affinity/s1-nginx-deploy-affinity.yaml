@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deploy-s1
+  namespace: namespace-0327
+  labels:
+    app: nginx-deploy-s1
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: nginx-deploy-s1
+        security: S1
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: topology.kubernetes.io/zone
+                    operator: In
+                    values: [ V ]
+      containers:
+        - name: nginx
+          image: nginx
+          imagePullPolicy: IfNotPresent
+  selector:
+    matchLabels:
+      app: nginx-deploy-s1
