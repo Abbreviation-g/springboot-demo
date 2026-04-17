@@ -1,0 +1,4 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: kube-logging  # 将这里替换为你想要的命名空间名称

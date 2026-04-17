@@ -21,6 +21,14 @@ kubectl create namespace redis
 # 安装
 cd ../
 helm install redis ./redis -n redis
+# 安装后查询
+helm list -n redis
+# 查询特定 release 的详细信息
+helm status redis -n redis
+# 查看 release 的历史版本
+helm history redis -n redis
+# 查看password
+kubectl get secret -n redis redis -o jsonpath={.data.redis-password} | base64 --decode
 
 kubectl get all -n redis
 #NAME                   READY   STATUS              RESTARTS   AGE
@@ -67,3 +75,17 @@ kubectl exec -it redis-replicas-1 -n redis -- /bin/bash
 helm uninstall redis -n redis
 
 #--------------------------------------------------------------------------------------------------------
+# 修改values.yaml之后可以更新
+helm upgrade redis ./redis -n redis
+# 查看 release 的历史版本
+helm history redis -n redis
+# 回滚
+helm rollback redis 2 -n redis
+# 列出所有 release
+helm list -n redis
+# 删除
+helm uninstall redis -n redis
+# 手动删除pvc, pv
+kubectl delete pvc redis-data-redis-master-0 redis-data-redis-replicas-0 redis-data-redis-replicas-1 redis-data-redis-replicas-2 -n redis
+kubectl delete pv pvc-36b84b1f-e039-4f7d-8e20-c39a9ce44068 pvc-900dc2d4-1bc8-4e04-a3da-485b3fe607a6 pvc-9647fdb0-0583-4cba-ab59-21b634a07a36 pvc-f618fbb6-4b14-45a0-ba78-c1c25384ae95
+
