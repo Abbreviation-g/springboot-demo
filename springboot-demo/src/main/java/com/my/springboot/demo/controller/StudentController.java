@@ -1,5 +1,6 @@
 package com.my.springboot.demo.controller;
 
+import com.my.springboot.demo.config.MyLogLevelFilter;
 import com.my.springboot.demo.dao.StudentMapper;
 import com.my.springboot.demo.entity.Student;
 import com.my.springboot.demo.eventlistener.MyEvent;
@@ -20,6 +21,7 @@ public class StudentController {
     private StudentMapper studentMapper;
     @Autowired
     private ApplicationEventPublisher eventPublisher;
+
     @PutMapping("/update")
     public String update() {
         log.info("update student");
@@ -28,12 +30,12 @@ public class StudentController {
 
     @PostMapping("/add")
     public Result<String> add(@Valid @RequestBody StudentAddRequest request) {
-        log.info("add student, request={}", request);
+        log.info(MyLogLevelFilter.MY_LEVEL, "add student, request={}", request);
         Student student = new Student();
         student.setName(request.getName());
         student.setClassId(request.getClassId());
         int result = studentMapper.insert(student);
-        log.info("add student, result={}", result);
+        log.info(MyLogLevelFilter.MY_LEVEL, "add student, result={}", result);
 
         eventPublisher.publishEvent(new MyEvent(student));
 
