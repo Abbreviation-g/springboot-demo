@@ -1,0 +1,35 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: local-path-pv
+spec:
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain  # 可选值: Retain, Recycle, Delete
+  storageClassName: local-path
+  local:
+    path: /opt/local-path-provisioner/pv-data  # Node 上的实际路径
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: kubernetes.io/hostname
+              operator: In
+              values:
+                - master001  # 替换为实际的节点名称
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: manual-local-path-pvc
+  namespace: namespace-0327
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: local-path
+  resources:
+    requests:
+      storage: 100Mi
+  volumeName: local-path-pv  # 关联到上面创建的 PV

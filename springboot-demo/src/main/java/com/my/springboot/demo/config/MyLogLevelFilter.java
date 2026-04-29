@@ -12,7 +12,6 @@ public class MyLogLevelFilter extends AbstractMatcherFilter<ILoggingEvent> {
 
     public static final Marker MY_LEVEL = MarkerFactory.getMarker("MY_LEVEL");
 
-
     Level level;
 
     @Override
