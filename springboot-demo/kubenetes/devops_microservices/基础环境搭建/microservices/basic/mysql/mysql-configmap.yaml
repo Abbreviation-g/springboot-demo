@@ -1,0 +1,28 @@
+# 主从配置，此处只是简单的演示，还可以添加其他的参数配置
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mysql
+  namespace: mysql
+  labels:
+    app: mysql
+data:
+  master.cnf: |
+    [client]
+    default-character-set=utf8
+    # Master
+    [mysqld]
+    character-set-server=utf8
+    log-bin=master-bin
+    skip-name-resolve
+  slave.cnf: |
+    [client]
+    default-character-set=utf8
+    # Slave
+    [mysqld]
+    character-set-server=utf8
+    super-read-only
+    skip-name-resolve
+    log-bin=slave-bin
+    #此处是忽略不需要同步的数据库
+    replicate-ignore-db=mysql

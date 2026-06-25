@@ -1,0 +1,135 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: seata-headless
+  namespace: seata
+  labels:
+    k8s-app: seata-server
+spec:
+  type: NodePort
+  ports:
+    - port: 8091
+      protocol: TCP
+      name: port-8091
+    - port: 7091
+      protocol: TCP
+      name: port-7091
+  selector:
+    k8s-app: seata-server
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: seata-server
+  namespace: seata
+  labels:
+    k8s-app: seata-server
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      k8s-app: seata-server
+  template:
+    metadata:
+      labels:
+        k8s-app: seata-server
+    spec:
+      containers:
+        - name: seata-server
+          image: apache/seata-server:2.2.0
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: SEATA_PORT
+              value: "8091"
+          ports:
+            - name: service
+              containerPort: 8091
+              protocol: TCP
+            - name: console
+              containerPort: 7091
+              protocol: TCP
+          volumeMounts:
+            - name: seata-config
+              mountPath: /seata-server/resources/application.yml
+              subPath: application.yml
+      volumes:
+        - name: seata-config
+          configMap:
+            name: seata-server-config
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: seata-server-config
+  namespace: seata
+data:
+  application.yml: |
+    server:
+      port: 7091
+    
+    spring:
+      application:
+        name: seata-server
+    
+    logging:
+      config: classpath:logback-spring.xml
+      file:
+        path: ${log.home:${user.home}/logs/seata}
+      extend:
+        logstash-appender:
+          destination: 127.0.0.1:4560
+        kafka-appender:
+          bootstrap-servers: 127.0.0.1:9092
+          topic: logback_to_logstash
+    
+    console:
+      user:
+        username: seata
+        password: seata
+    seata:
+      config:
+        # support: nacos, consul, apollo, zk, etcd3
+        type: nacos
+        nacos:
+          server-addr: nacos-headless.nacos:8848
+          group: SEATA_GROUP
+          username: nacos
+          password: nacos
+          data-id: seataServer.properties
+      registry:
+        # support: nacos, eureka, redis, zk, consul, etcd3, sofa
+        type: nacos
+        nacos:
+          application: seata-server
+          server-addr: nacos-headless.nacos:8848
+          group: SEATA_GROUP
+          cluster: default
+          username: nacos
+          password: nacos
+      store:
+        # support: file 、 db 、 redis
+        mode: db
+        db:
+          datasource: druid
+          db-type: mysql
+          driver-class-name: com.mysql.cj.jdbc.Driver   
+          url: jdbc:mysql://mysql-write.mysql:3306/seata
+          user: root
+          password: 123456
+          min-conn: 10
+          max-conn: 100
+          global-table: global_table
+          branch-table: branch_table
+          lock-table: lock_table
+          distributed-lock-table: distributed_lock
+          vgroup-table: vgroup_table
+          query-limit: 1000
+          max-wait: 5000
+      security:
+        secretKey: SeataSecretKey0c382ef121d778043159209298fd40bf3850a017
+        tokenValidityInMilliseconds: 1800000
+        csrf-ignore-urls: /metadata/v1/**
+        ignore:
+          urls: /,/**/*.css,/**/*.js,/**/*.html,/**/*.map,/**/*.svg,/**/*.png,/**/*.jpeg,/**/*.ico,/api/v1/auth/login,/version.json,/health,/error,/vgroup/v1/**
